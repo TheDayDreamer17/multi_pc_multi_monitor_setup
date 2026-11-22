@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-mac-app.sh - Build a standalone macOS .app bundle for OmniDisplay
+# build-mac-app.sh - Build a standalone native macOS Cocoa .app bundle for OmniDisplay
 
 set -e
 
@@ -8,7 +8,7 @@ REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 APP_DIR="${REPO_DIR}/OmniDisplay.app"
 PYTHON_BIN="$(which python3)"
 
-echo "=== Building macOS OmniDisplay.app ==="
+echo "=== Building Native macOS OmniDisplay.app ==="
 
 rm -rf "${APP_DIR}"
 mkdir -p "${APP_DIR}/Contents/MacOS"
@@ -40,14 +40,33 @@ cat << EOF > "${APP_DIR}/Contents/Info.plist"
 </plist>
 EOF
 
-# 2. Executable launcher script
+# 2. Compile Native Cocoa WebKit window using Swift
+echo "Compiling native Cocoa application (Swift)..."
+swiftc -O "${REPO_DIR}/omnidisplay/native/mac_app.swift" -o "${APP_DIR}/Contents/MacOS/OmniDisplayNative"
+chmod +x "${APP_DIR}/Contents/MacOS/OmniDisplayNative"
+
+# 3. Executable launcher script
 cat << EOF > "${APP_DIR}/Contents/MacOS/OmniDisplay"
 #!/usr/bin/env bash
-cd "${REPO_DIR}"
-exec "${PYTHON_BIN}" -m omnidisplay.gui.launcher
+REPO_DIR="${REPO_DIR}"
+cd "\${REPO_DIR}"
+
+# Ensure background daemon is running
+if ! curl -s --connect-timeout 0.5 http://127.0.0.1:5959/api/status >/dev/null 2>&1; then
+    nohup "${PYTHON_BIN}" -m omnidisplay.cli start --role mac >/tmp/omnidisplay.log 2>/tmp/omnidisplay.err &
+    sleep 0.5
+fi
+
+DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+exec "\${DIR}/OmniDisplayNative"
 EOF
 
 chmod +x "${APP_DIR}/Contents/MacOS/OmniDisplay"
 
+# 4. Link into ~/Applications
+mkdir -p "${HOME}/Applications"
+ln -sf "${APP_DIR}" "${HOME}/Applications/OmniDisplay.app"
+
 echo "✓ Created: ${APP_DIR}"
-echo "You can now drag OmniDisplay.app to /Applications or open it directly!"
+echo "✓ Installed to: ${HOME}/Applications/OmniDisplay.app"
+echo "You can now open OmniDisplay directly from Spotlight (Cmd+Space) or Applications!"

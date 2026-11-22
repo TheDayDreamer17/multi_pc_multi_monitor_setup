@@ -1,4 +1,4 @@
-﻿# install-windows.ps1 - Install OmniDisplay Desktop App and Auto-Start on Windows
+# install-windows.ps1 - Install OmniDisplay Desktop App and Auto-Start on Windows
 
 $ErrorActionPreference = "Stop"
 
