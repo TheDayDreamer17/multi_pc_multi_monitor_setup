@@ -164,13 +164,16 @@ class StateManager:
         # If current node is the host actively holding the display:
         # We can issue local DDC command directly!
         if current_host == self.role:
-            print(f"[StateManager] Local DDC switch: {display_key} ({idx}) -> {target_host} (code {target_vcp_code})")
+            print(f"[StateManager] Local DDC switch: {display_key} ({idx}) -> {target_host} (code {target_vcp_code})", flush=True)
             self.ddc.set_input_source(idx, target_vcp_code)
         else:
             # The display is currently with the peer!
             # Relay request to peer so the peer sends the DDC command from its active port!
-            print(f"[StateManager] Relay switch request to peer for {display_key} -> {target_host}")
+            print(f"[StateManager] Relay switch request to peer for {display_key} -> {target_host}", flush=True)
             self._relay_to_peer(display_key, target_host)
+            # Also attempt local DDC as fallback in case monitor listens to local port or peer is offline
+            print(f"[StateManager] Fallback local DDC attempt for {display_key} ({idx}) -> {target_host} (code {target_vcp_code})", flush=True)
+            self.ddc.set_input_source(idx, target_vcp_code)
 
         self.current_state[display_key] = target_host
 

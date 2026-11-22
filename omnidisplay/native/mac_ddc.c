@@ -45,19 +45,18 @@ static void discover_displays(void) {
 static bool set_vcp(IOAVServiceRef service, uint8_t vcp, uint16_t value) {
     if (!service) return false;
 
-    // DDC/CI Set VCP command
-    // [Source 0x51] [Length 0x84] [Command 0x03] [VCP] [Val_Hi] [Val_Lo] [Checksum]
-    uint8_t packet[7];
-    packet[0] = 0x51;
-    packet[1] = 0x84;
-    packet[2] = 0x03;
-    packet[3] = vcp;
-    packet[4] = (uint8_t)((value >> 8) & 0xFF);
-    packet[5] = (uint8_t)(value & 0xFF);
+    // DDC/CI Set VCP command (6 bytes payload, dataAddress = 0x51)
+    // [Length 0x84] [Command 0x03] [VCP] [Val_Hi] [Val_Lo] [Checksum]
+    uint8_t packet[6];
+    packet[0] = 0x84;
+    packet[1] = 0x03;
+    packet[2] = vcp;
+    packet[3] = (uint8_t)((value >> 8) & 0xFF);
+    packet[4] = (uint8_t)(value & 0xFF);
 
-    // DDC/CI XOR checksum starting with 0x6E (7-bit address 0x37 shifted left)
-    uint8_t chk = 0x6E ^ packet[0] ^ packet[1] ^ packet[2] ^ packet[3] ^ packet[4] ^ packet[5];
-    packet[6] = chk;
+    // DDC/CI XOR checksum starting with 0x6E (7-bit address 0x37 shifted left) and 0x51
+    uint8_t chk = 0x6E ^ 0x51 ^ packet[0] ^ packet[1] ^ packet[2] ^ packet[3] ^ packet[4];
+    packet[5] = chk;
 
     // Standard I2C slave address 0x37, write offset 0x51
     IOReturn ret = IOAVServiceWriteI2C(service, 0x37, 0x51, packet, sizeof(packet));
