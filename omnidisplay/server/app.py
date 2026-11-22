@@ -44,9 +44,11 @@ class OmniDisplayHandler(BaseHTTPRequestHandler):
             return
 
         # Serve Web UI Root
-        rel_path = self.path.lstrip("/")
+        rel_path = self.path.split("?")[0].lstrip("/")
         if not rel_path or rel_path == "":
             rel_path = "index.html"
+        elif rel_path.startswith("static/"):
+            rel_path = rel_path[len("static/"):]
 
         filepath = os.path.join(self.static_dir, rel_path)
         if os.path.exists(filepath) and os.path.isfile(filepath):
