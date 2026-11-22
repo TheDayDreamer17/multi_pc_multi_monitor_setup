@@ -56,7 +56,7 @@ DEFAULT_CONFIG = {
             "index_pc": 1,
             "inputs": {
                 "mac": 17,  # HDMI-1 (0x11)
-                "pc": 18    # HDMI-2 (0x12)
+                "pc": 15    # DisplayPort (0x0F)
             }
         },
         "right": {
@@ -234,6 +234,10 @@ class StateManager:
         current_host = self.current_state[display_key]
         idx = disp_cfg["index_mac"] if self.role == "mac" else disp_cfg["index_pc"]
 
+        # If switching away to peer, wake peer host first so its GPU outputs active clock
+        if target_host != self.role:
+            self._wake_peer()
+
         # If current node is the host actively holding the display:
         # We can issue local DDC command directly!
         if current_host == self.role:
@@ -255,6 +259,23 @@ class StateManager:
 
         return True
 
+    def wake_host(self):
+        """Wake display server / GPU output so external monitors receive signal immediately."""
+        logger.info(f"Triggering display wake for role '{self.role}'")
+        if self.role == "mac":
+            try:
+                import subprocess
+                subprocess.run(["caffeinate", "-u", "-t", "2"], capture_output=True, timeout=1)
+            except Exception as e:
+                logger.warning(f"Failed running caffeinate: {e}")
+        elif self.role == "pc":
+            try:
+                import ctypes
+                ctypes.windll.kernel32.SetThreadExecutionState(0x80000001 | 0x00000002)
+                ctypes.windll.user32.mouse_event(0x0001, 0, 0, 0, 0)
+            except Exception as e:
+                logger.warning(f"Failed waking Windows display: {e}")
+
     def execute_relayed_switch(self, display_key: str, target_host: str) -> bool:
         """Called when peer asks us to switch an input locally."""
         if display_key not in ("left", "right"):
@@ -262,11 +283,7 @@ class StateManager:
 
         # If we are Mac and being asked to take the display, wake Mac displays
         if self.role == "mac" and target_host == "mac":
-            try:
-                import subprocess
-                subprocess.run(["caffeinate", "-u", "-t", "2"], capture_output=True, timeout=1)
-            except Exception:
-                pass
+            self.wake_host()
 
         disp_cfg = self.config["displays"][display_key]
         target_vcp_code = disp_cfg["inputs"].get(target_host)
@@ -276,6 +293,17 @@ class StateManager:
         self.ddc.set_input_source(idx, target_vcp_code)
         self.current_state[display_key] = target_host
         return True
+
+    def _wake_peer(self):
+        if not self.peer_url:
+            return
+        url = f"{self.peer_url}/api/wake"
+        req = urllib.request.Request(url, data=b"{}", headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                logger.info("Sent wake notification to peer")
+        except Exception:
+            pass
 
     def _relay_to_peer(self, display_key: str, target_host: str):
         if not self.peer_url:
@@ -309,3 +337,5 @@ class StateManager:
             logger.info(f"State sync received from peer: {state}")
             self.current_state["left"] = state["left"]
             self.current_state["right"] = state["right"]
+            if self.role in (state.get("left"), state.get("right")):
+                self.wake_host()

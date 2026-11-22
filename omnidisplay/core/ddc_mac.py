@@ -10,6 +10,13 @@ import json
 from typing import List, Dict, Any, Optional
 from omnidisplay.core.ddc_base import DDCController
 
+LG_ALT_INPUT_MAP = {
+    17: 0x90,  # HDMI-1 (0x11 -> 0x90)
+    18: 0x91,  # HDMI-2 (0x12 -> 0x91)
+    15: 0xD0,  # DisplayPort (0x0F -> 0xD0)
+    16: 0xD1,  # USB-C / Thunderbolt (0x10 -> 0xD1)
+}
+
 class MacDDCController(DDCController):
     """Controls external displays on macOS using DDC/CI."""
 
@@ -87,8 +94,10 @@ class MacDDCController(DDCController):
 
     def set_input_source(self, display_index: int, input_value: int) -> bool:
         """
-        Set VCP Feature 0x60 (Input Source Select).
+        Set VCP Feature 0x60 (Input Source Select) and LG-alt VCP 0xF4 for LG monitors.
         """
+        success = False
+
         # 1. Try native binary
         if self.native_bin:
             try:
@@ -97,9 +106,20 @@ class MacDDCController(DDCController):
                     capture_output=True, text=True, timeout=3
                 )
                 if res.returncode == 0:
-                    return True
+                    success = True
+
+                # For LG displays, also send proprietary 0xF4 command
+                if input_value in LG_ALT_INPUT_MAP:
+                    lg_code = LG_ALT_INPUT_MAP[input_value]
+                    subprocess.run(
+                        [self.native_bin, "set", str(display_index), "0xF4", str(lg_code)],
+                        capture_output=True, text=True, timeout=3
+                    )
             except Exception:
                 pass
+
+        if success:
+            return True
 
         # 2. Try m1ddc: m1ddc set input <value> --display <index+1>
         if self.m1ddc_path:
@@ -120,6 +140,12 @@ class MacDDCController(DDCController):
                     [self.betterdisplay_path, "set", f"-namelike=Display", f"-vcp=0x60:{input_value}"],
                     capture_output=True, text=True, timeout=3
                 )
+                if input_value in LG_ALT_INPUT_MAP:
+                    lg_code = LG_ALT_INPUT_MAP[input_value]
+                    subprocess.run(
+                        [self.betterdisplay_path, "set", f"-namelike=Display", f"-ddcAlt=0x{lg_code:X}", "-vcp=inputSelectAlt"],
+                        capture_output=True, text=True, timeout=3
+                    )
                 if res.returncode == 0:
                     return True
             except Exception:

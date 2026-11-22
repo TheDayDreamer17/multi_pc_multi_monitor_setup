@@ -168,6 +168,12 @@ class OmniDisplayHandler(BaseHTTPRequestHandler):
                 self._send_json(500, {"error": str(e)})
             return
 
+        # 7. Wake Host Display
+        if self.path == "/api/wake":
+            self.state_mgr.wake_host()
+            self._send_json(200, {"status": "awake"})
+            return
+
         self._send_json(404, {"error": "Endpoint Not Found"})
 
     def _send_json(self, code: int, data: dict):

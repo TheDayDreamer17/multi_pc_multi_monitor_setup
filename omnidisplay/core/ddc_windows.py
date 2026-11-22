@@ -14,6 +14,13 @@ from omnidisplay.core.logger import get_logger
 
 logger = get_logger("ddc.windows")
 
+LG_ALT_INPUT_MAP = {
+    17: 0x90,  # HDMI-1 (0x11 -> 0x90)
+    18: 0x91,  # HDMI-2 (0x12 -> 0x91)
+    15: 0xD0,  # DisplayPort (0x0F -> 0xD0)
+    16: 0xD1,  # USB-C / Thunderbolt (0x10 -> 0xD1)
+}
+
 class WindowsDDCController(DDCController):
     """Controls external displays on Windows using DDC/CI via dxva2.dll or CLI."""
 
@@ -192,8 +199,16 @@ class WindowsDDCController(DDCController):
                                             break
                                         last_err = ctypes.GetLastError()
                                         time.sleep(0.12)
-                                    dxva2.DestroyPhysicalMonitors(count.value, phys_mons)
                                     logger.info(f"SetVCPFeature(disp={display_index} [{desc}], 0x60={input_value}) -> success={bool(res)}, err={last_err}")
+
+                                    # Modern LG monitors (UltraWide/UltraGear/UltraFine) ignore 0x60 writes and require VCP 0xF4
+                                    if input_value in LG_ALT_INPUT_MAP:
+                                        lg_code = LG_ALT_INPUT_MAP[input_value]
+                                        time.sleep(0.08)
+                                        res_f4 = dxva2.SetVCPFeature(hPhys, 0xF4, lg_code)
+                                        logger.info(f"SetVCPFeature(disp={display_index} [{desc}], 0xF4=0x{lg_code:X}) -> success={bool(res_f4)}")
+
+                                    dxva2.DestroyPhysicalMonitors(count.value, phys_mons)
                                     return bool(res)
                                 current_index += 1
                             dxva2.DestroyPhysicalMonitors(count.value, phys_mons)
