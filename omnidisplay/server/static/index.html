@@ -559,15 +559,19 @@ async function fetchStatus() {
 }
 
 function updateDropdownOptions(selectEl, detectedDisplays, currentName) {
-  // Build list of unique display names
+  // Build list of clean display names (exclude generic OS placeholders)
   const names = new Set(["GIGABYTE G24F", "LG ULTRAWIDE"]);
   if (detectedDisplays && Array.isArray(detectedDisplays)) {
-    detectedDisplays.forEach(d => { if (d.name) names.add(d.name); });
+    detectedDisplays.forEach(d => {
+      if (d.name && !d.name.toLowerCase().includes("generic")) {
+        names.add(d.name);
+      }
+    });
   }
-  if (currentName) names.add(currentName);
+  if (currentName && !currentName.toLowerCase().includes("generic")) {
+    names.add(currentName);
+  }
 
-  // Keep existing selection if user is actively interacting
-  const currentVal = selectEl.value;
   selectEl.innerHTML = "";
   names.forEach(name => {
     const opt = document.createElement("option");

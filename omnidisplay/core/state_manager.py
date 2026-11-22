@@ -111,29 +111,29 @@ class StateManager:
             logger.error(f"Failed to save config: {e}")
 
     def map_display(self, slot: str, display_name: str) -> bool:
-        """Assign a detected display name to slot 'left' or 'right'."""
+        """Assign a display name to slot 'left' or 'right' without auto-mutating the other slot."""
         if slot not in ("left", "right"):
             raise ValueError(f"Invalid slot: {slot}")
 
-        other_slot = "right" if slot == "left" else "left"
-
-        # If user assigned the display that other_slot currently has, swap them!
-        if self.config["displays"][other_slot]["name"] == display_name:
-            self.config["displays"]["left"], self.config["displays"]["right"] = (
-                self.config["displays"]["right"],
-                self.config["displays"]["left"]
-            )
-            self.current_state["left"], self.current_state["right"] = (
-                self.current_state["right"],
-                self.current_state["left"]
-            )
-        else:
-            detected = self.ddc.list_displays()
-            found = next((d for d in detected if d.get("name") == display_name), None)
-            if found:
-                idx_key = "index_mac" if self.role == "mac" else "index_pc"
-                self.config["displays"][slot]["name"] = found["name"]
-                self.config["displays"][slot][idx_key] = found["index"]
+        self.config["displays"][slot]["name"] = display_name
+        detected = self.ddc.list_displays()
+        found = next((d for d in detected if d.get("name") == display_name), None)
+        if found:
+            idx_key = "index_mac" if self.role == "mac" else "index_pc"
+            self.config["displays"][slot][idx_key] = found["index"]
+            # Auto-assign verified inputs based on hardware model
+            if "gigabyte" in display_name.lower():
+                self.config["displays"][slot]["inputs"] = {"mac": 17, "pc": 18}
+            elif "lg" in display_name.lower() or "ultrawide" in display_name.lower():
+                self.config["displays"][slot]["inputs"] = {"mac": 17, "pc": 15}
+        elif "gigabyte" in display_name.lower():
+            self.config["displays"][slot]["index_pc"] = 1
+            self.config["displays"][slot]["index_mac"] = 1
+            self.config["displays"][slot]["inputs"] = {"mac": 17, "pc": 18}
+        elif "lg" in display_name.lower() or "ultrawide" in display_name.lower():
+            self.config["displays"][slot]["index_pc"] = 0
+            self.config["displays"][slot]["index_mac"] = 0
+            self.config["displays"][slot]["inputs"] = {"mac": 17, "pc": 15}
 
         self._save_config()
         return True
@@ -172,10 +172,12 @@ class StateManager:
         name_right = self.config["displays"]["right"]["name"]
 
         for d in detected:
-            if d.get("index") == target_idx_left:
-                name_left = d.get("name", name_left)
-            elif d.get("index") == target_idx_right:
-                name_right = d.get("name", name_right)
+            d_name = d.get("name", "")
+            if d_name and "generic" not in d_name.lower():
+                if d.get("index") == target_idx_left:
+                    name_left = d_name
+                elif d.get("index") == target_idx_right:
+                    name_right = d_name
 
         return {
             "role": self.role,

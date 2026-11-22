@@ -4,6 +4,7 @@ Uses native Win32 dxva2.dll (SetVCPFeature) and falls back to ControlMyMonitor /
 """
 
 import sys
+import re
 import time
 import shutil
 import subprocess
@@ -37,6 +38,25 @@ class WindowsDDCController(DDCController):
                         ('szPhysicalMonitorDescription', wintypes.WCHAR * 128)
                     ]
 
+                class MONITORINFOEXW(ctypes.Structure):
+                    _fields_ = [
+                        ('cbSize', wintypes.DWORD),
+                        ('rcMonitor', wintypes.RECT),
+                        ('rcWork', wintypes.RECT),
+                        ('dwFlags', wintypes.DWORD),
+                        ('szDevice', wintypes.WCHAR * 32)
+                    ]
+
+                class DISPLAY_DEVICEW(ctypes.Structure):
+                    _fields_ = [
+                        ('cb', wintypes.DWORD),
+                        ('DeviceName', wintypes.WCHAR * 32),
+                        ('DeviceString', wintypes.WCHAR * 128),
+                        ('StateFlags', wintypes.DWORD),
+                        ('DeviceID', wintypes.WCHAR * 128),
+                        ('DeviceKey', wintypes.WCHAR * 128)
+                    ]
+
                 monitors = []
                 def monitor_enum_proc(hMonitor, hdcMonitor, lprcMonitor, dwData):
                     monitors.append(hMonitor)
@@ -54,16 +74,55 @@ class WindowsDDCController(DDCController):
 
                 disp_idx = 0
                 for hMon in monitors:
+                    # Resolve hardware device ID from Windows display adapter
+                    hardware_name = None
+                    try:
+                        minfo = MONITORINFOEXW()
+                        minfo.cbSize = ctypes.sizeof(MONITORINFOEXW)
+                        if user32.GetMonitorInfoW(hMon, ctypes.byref(minfo)):
+                            ddev = DISPLAY_DEVICEW()
+                            ddev.cb = ctypes.sizeof(DISPLAY_DEVICEW)
+                            if user32.EnumDisplayDevicesW(minfo.szDevice, 0, ctypes.byref(ddev), 0):
+                                did = ddev.DeviceID.upper()
+                                if "GBT" in did or "2402" in did or "G24F" in did:
+                                    hardware_name = "GIGABYTE G24F"
+                                elif "GSM" in did or "7768" in did or "WK95" in did:
+                                    hardware_name = "LG ULTRAWIDE"
+                    except Exception:
+                        pass
+
                     count = wintypes.DWORD()
                     if dxva2.GetNumberOfPhysicalMonitorsFromHMONITOR(hMon, ctypes.byref(count)) and count.value > 0:
                         phys_mons = (PHYSICAL_MONITOR * count.value)()
                         if dxva2.GetPhysicalMonitorsFromHMONITOR(hMon, count.value, phys_mons):
                             for i in range(count.value):
-                                desc = phys_mons[i].szPhysicalMonitorDescription
+                                hPhys = phys_mons[i].hPhysicalMonitor
+                                desc = hardware_name or phys_mons[i].szPhysicalMonitorDescription or f"Display {disp_idx + 1}"
+                                # If still generic Windows driver string, query DDC capabilities
+                                if "generic" in desc.lower():
+                                    try:
+                                        time.sleep(0.05)
+                                        cap_len = wintypes.DWORD()
+                                        if dxva2.GetCapabilitiesStringLength(hPhys, ctypes.byref(cap_len)) and cap_len.value > 0:
+                                            buf = ctypes.create_string_buffer(cap_len.value)
+                                            if dxva2.CapabilitiesRequestAndCapabilitiesReply(hPhys, buf, cap_len.value):
+                                                raw = buf.value.decode('latin1', errors='ignore')
+                                                m = re.search(r'model\(([^)]+)\)', raw, re.IGNORECASE)
+                                                if m:
+                                                    model_code = m.group(1).strip()
+                                                    if "WK95U" in model_code:
+                                                        desc = "LG ULTRAWIDE"
+                                                    elif "G24F" in model_code:
+                                                        desc = "GIGABYTE G24F"
+                                                    else:
+                                                        desc = model_code
+                                    except Exception:
+                                        pass
+
                                 displays.append({
                                     "id": f"win-display-{disp_idx}",
                                     "index": disp_idx,
-                                    "name": desc or f"Display {disp_idx + 1}",
+                                    "name": desc,
                                     "driver": "dxva2"
                                 })
                                 disp_idx += 1
