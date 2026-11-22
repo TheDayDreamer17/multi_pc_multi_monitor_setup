@@ -102,6 +102,55 @@ class StateManager:
             pass
         return DEFAULT_CONFIG.copy()
 
+    def _save_config(self):
+        try:
+            with open(self.config_path, "w", encoding="utf-8") as f:
+                json.dump(self.config, f, indent=2)
+            logger.info(f"Saved configuration to {self.config_path}")
+        except Exception as e:
+            logger.error(f"Failed to save config: {e}")
+
+    def map_display(self, slot: str, display_name: str) -> bool:
+        """Assign a detected display name to slot 'left' or 'right'."""
+        if slot not in ("left", "right"):
+            raise ValueError(f"Invalid slot: {slot}")
+
+        other_slot = "right" if slot == "left" else "left"
+
+        # If user assigned the display that other_slot currently has, swap them!
+        if self.config["displays"][other_slot]["name"] == display_name:
+            self.config["displays"]["left"], self.config["displays"]["right"] = (
+                self.config["displays"]["right"],
+                self.config["displays"]["left"]
+            )
+            self.current_state["left"], self.current_state["right"] = (
+                self.current_state["right"],
+                self.current_state["left"]
+            )
+        else:
+            detected = self.ddc.list_displays()
+            found = next((d for d in detected if d.get("name") == display_name), None)
+            if found:
+                idx_key = "index_mac" if self.role == "mac" else "index_pc"
+                self.config["displays"][slot]["name"] = found["name"]
+                self.config["displays"][slot][idx_key] = found["index"]
+
+        self._save_config()
+        return True
+
+    def swap_displays(self) -> bool:
+        """Swap left and right display configuration."""
+        self.config["displays"]["left"], self.config["displays"]["right"] = (
+            self.config["displays"]["right"],
+            self.config["displays"]["left"]
+        )
+        self.current_state["left"], self.current_state["right"] = (
+            self.current_state["right"],
+            self.current_state["left"]
+        )
+        self._save_config()
+        return True
+
     def set_peer_endpoint(self, host: str, port: int):
         self.peer_url = f"http://{host}:{port}"
         logger.info(f"Peer endpoint updated: {self.peer_url}")
@@ -132,16 +181,19 @@ class StateManager:
             "role": self.role,
             "peer_url": self.peer_url,
             "current_preset": matched_preset,
+            "detected_displays": detected,
             "displays": {
                 "left": {
                     "id": f"disp-{target_idx_left}",
                     "name": name_left,
+                    "index": target_idx_left,
                     "active_host": self.current_state["left"],
                     "inputs": self.config["displays"]["left"]["inputs"]
                 },
                 "right": {
                     "id": f"disp-{target_idx_right}",
                     "name": name_right,
+                    "index": target_idx_right,
                     "active_host": self.current_state["right"],
                     "inputs": self.config["displays"]["right"]["inputs"]
                 }

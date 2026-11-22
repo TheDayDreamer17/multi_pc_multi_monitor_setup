@@ -145,6 +145,29 @@ class OmniDisplayHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"status": "synced"})
             return
 
+        # 5. Map Display to Slot (Left or Right)
+        if self.path == "/api/map_display":
+            slot = payload.get("slot")
+            display_name = payload.get("display_name")
+            if not slot or not display_name:
+                self._send_json(400, {"error": "Missing 'slot' or 'display_name'"})
+                return
+            try:
+                self.state_mgr.map_display(slot, display_name)
+                self._send_json(200, {"status": "ok", "displays": self.state_mgr.config["displays"]})
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
+            return
+
+        # 6. Swap Left and Right Displays
+        if self.path == "/api/swap_displays":
+            try:
+                self.state_mgr.swap_displays()
+                self._send_json(200, {"status": "ok", "displays": self.state_mgr.config["displays"]})
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
+            return
+
         self._send_json(404, {"error": "Endpoint Not Found"})
 
     def _send_json(self, code: int, data: dict):

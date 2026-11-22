@@ -106,13 +106,24 @@ body {
   box-shadow: 0 0 8px var(--accent-green);
 }
 
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .section-title {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
-  margin-bottom: 16px;
   font-weight: 600;
+}
+
+.section-hint {
+  font-size: 12px;
+  color: #6e7681;
 }
 
 /* Monitors Visualizer */
@@ -120,7 +131,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   margin-bottom: 34px;
 }
 
@@ -138,35 +149,37 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
-  padding: 0 4px;
+  padding: 0 2px;
+  gap: 8px;
 }
 
-.monitor-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.2px;
-}
-
-.monitor-badge {
+.slot-tag {
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.monitor-badge.badge-mac {
-  background: rgba(240, 136, 62, 0.2);
-  color: #ff9b57;
-  border: 1px solid rgba(240, 136, 62, 0.4);
+.monitor-select {
+  background: #21262d;
+  color: var(--text-main);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  max-width: 200px;
+  width: 100%;
 }
 
-.monitor-badge.badge-pc {
-  background: rgba(88, 166, 255, 0.2);
-  color: #79b8ff;
-  border: 1px solid rgba(88, 166, 255, 0.4);
+.monitor-select:hover, .monitor-select:focus {
+  border-color: var(--accent-blue);
+  background: #282e36;
 }
 
 .monitor-screen {
@@ -264,9 +277,34 @@ body {
 }
 
 .desk-divider {
-  font-size: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 14px;
+}
+
+.swap-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
   color: var(--text-muted);
-  padding-top: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.swap-btn:hover {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  background: rgba(88, 166, 255, 0.12);
+  transform: rotate(180deg) scale(1.05);
 }
 
 /* Presets Grid */
@@ -360,7 +398,7 @@ body {
     gap: 20px;
   }
   .desk-divider {
-    display: none;
+    transform: rotate(90deg);
   }
   .presets-grid {
     grid-template-columns: 1fr 1fr;
@@ -387,18 +425,24 @@ body {
 
     <!-- Visual Monitor Representation -->
     <section class="monitors-section">
-      <div class="section-title">Active Display Routing</div>
+      <div class="section-header-row">
+        <span class="section-title">Active Display Routing</span>
+        <span class="section-hint">Select your monitor per desk position below</span>
+      </div>
       <div class="monitors-container">
-        <!-- Display Left (GIGABYTE G24F) -->
+        <!-- Display Left -->
         <div class="monitor-card" id="card-left">
           <div class="monitor-header">
-            <span class="monitor-name" id="name-left">GIGABYTE G24F</span>
-            <span class="monitor-badge" id="badge-left">DETECTING</span>
+            <span class="slot-tag">LEFT DESK</span>
+            <select class="monitor-select" id="select-left" onchange="onSelectDisplay('left', this.value)">
+              <option value="GIGABYTE G24F">GIGABYTE G24F</option>
+              <option value="LG ULTRAWIDE">LG ULTRAWIDE</option>
+            </select>
           </div>
           <div class="monitor-screen" id="screen-left">
             <div class="screen-icon" id="icon-left">🖥️</div>
             <div class="screen-host" id="host-left">DETECTING...</div>
-            <div class="screen-sub">Left Monitor</div>
+            <div class="screen-sub" id="sub-left">Active Stream</div>
           </div>
           <div class="monitor-stand"></div>
           <div class="stream-selector">
@@ -411,21 +455,24 @@ body {
           </div>
         </div>
 
-        <!-- Center separator / Desk layout -->
+        <!-- Center separator / Interactive Swap button -->
         <div class="desk-divider">
-          <span class="divider-icon">⚡</span>
+          <button class="swap-btn" title="Swap Left and Right Monitors" onclick="swapDisplays()">⇄</button>
         </div>
 
-        <!-- Display Right (LG ULTRAWIDE) -->
+        <!-- Display Right -->
         <div class="monitor-card" id="card-right">
           <div class="monitor-header">
-            <span class="monitor-name" id="name-right">LG ULTRAWIDE</span>
-            <span class="monitor-badge" id="badge-right">DETECTING</span>
+            <span class="slot-tag">RIGHT DESK</span>
+            <select class="monitor-select" id="select-right" onchange="onSelectDisplay('right', this.value)">
+              <option value="LG ULTRAWIDE">LG ULTRAWIDE</option>
+              <option value="GIGABYTE G24F">GIGABYTE G24F</option>
+            </select>
           </div>
           <div class="monitor-screen" id="screen-right">
             <div class="screen-icon" id="icon-right">🖥️</div>
             <div class="screen-host" id="host-right">DETECTING...</div>
-            <div class="screen-sub">Right Monitor</div>
+            <div class="screen-sub" id="sub-right">Active Stream</div>
           </div>
           <div class="monitor-stand"></div>
           <div class="stream-selector">
@@ -442,14 +489,14 @@ body {
 
     <!-- 4 Presets Grid -->
     <section class="presets-section">
-      <div class="section-title">Quick Presets (Keys 1-4)</div>
+      <div class="section-title" style="margin-bottom: 16px;">Quick Presets (Keys 1-4)</div>
       <div class="presets-grid">
         <!-- Preset 1: PC in Both -->
         <div class="preset-card" id="preset-pc_both" onclick="applyPreset('pc_both')">
           <div class="preset-key">1</div>
           <div class="preset-icon">🖥️ 🖥️</div>
           <div class="preset-name">Both on PC</div>
-          <div class="preset-desc">Gigabyte: PC • LG: PC</div>
+          <div class="preset-desc" id="preset-desc-pc_both">All displays -> PC</div>
         </div>
 
         <!-- Preset 2: Mac in Both -->
@@ -457,23 +504,23 @@ body {
           <div class="preset-key">2</div>
           <div class="preset-icon">🍎 🍎</div>
           <div class="preset-name">Both on Mac</div>
-          <div class="preset-desc">Gigabyte: Mac • LG: Mac</div>
+          <div class="preset-desc" id="preset-desc-mac_both">All displays -> Mac</div>
         </div>
 
-        <!-- Preset 3: Gigabyte PC, LG Mac -->
+        <!-- Preset 3: Left PC, Right Mac -->
         <div class="preset-card" id="preset-split_pc_mac" onclick="applyPreset('split_pc_mac')">
           <div class="preset-key">3</div>
           <div class="preset-icon">🖥️ 🍎</div>
-          <div class="preset-name">Gigabyte PC • LG Mac</div>
-          <div class="preset-desc">Left: PC • Right: Mac</div>
+          <div class="preset-name" id="preset-name-split_pc_mac">Left PC • Right Mac</div>
+          <div class="preset-desc" id="preset-desc-split_pc_mac">Workstation Split A</div>
         </div>
 
-        <!-- Preset 4: Gigabyte Mac, LG PC -->
+        <!-- Preset 4: Left Mac, Right PC -->
         <div class="preset-card" id="preset-split_mac_pc" onclick="applyPreset('split_mac_pc')">
           <div class="preset-key">4</div>
           <div class="preset-icon">🍎 🖥️</div>
-          <div class="preset-name">Gigabyte Mac • LG PC</div>
-          <div class="preset-desc">Left: Mac • Right: PC</div>
+          <div class="preset-name" id="preset-name-split_mac_pc">Left Mac • Right PC</div>
+          <div class="preset-desc" id="preset-desc-split_mac_pc">Workstation Split B</div>
         </div>
       </div>
     </section>
@@ -495,6 +542,7 @@ body {
 
   <script>
 let currentStatus = null;
+let lastDetectedList = [];
 
 async function fetchStatus() {
   try {
@@ -508,6 +556,26 @@ async function fetchStatus() {
     document.getElementById("peer-text").innerText = "Connecting to daemon...";
     document.getElementById("peer-status").className = "status-badge";
   }
+}
+
+function updateDropdownOptions(selectEl, detectedDisplays, currentName) {
+  // Build list of unique display names
+  const names = new Set(["GIGABYTE G24F", "LG ULTRAWIDE"]);
+  if (detectedDisplays && Array.isArray(detectedDisplays)) {
+    detectedDisplays.forEach(d => { if (d.name) names.add(d.name); });
+  }
+  if (currentName) names.add(currentName);
+
+  // Keep existing selection if user is actively interacting
+  const currentVal = selectEl.value;
+  selectEl.innerHTML = "";
+  names.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.innerText = name;
+    if (name === currentName) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
 }
 
 function render(data) {
@@ -527,17 +595,25 @@ function render(data) {
     peerEndpoint.innerText = "Waiting for peer...";
   }
 
-  // Update Left Display (GIGABYTE G24F)
+  // Populate Dropdowns with detected monitors
+  const selectLeft = document.getElementById("select-left");
+  const selectRight = document.getElementById("select-right");
+  const detected = data.detected_displays || [];
+  
+  // Only rebuild options if document is not currently focused on the dropdown
+  if (document.activeElement !== selectLeft) {
+    updateDropdownOptions(selectLeft, detected, data.displays.left.name);
+  }
+  if (document.activeElement !== selectRight) {
+    updateDropdownOptions(selectRight, detected, data.displays.right.name);
+  }
+
+  // Update Left Display Screen
   const leftDisp = data.displays.left;
   const leftHost = leftDisp.active_host;
-  document.getElementById("name-left").innerText = leftDisp.name || "GIGABYTE G24F";
   document.getElementById("host-left").innerText = leftHost === "mac" ? "APPLE MAC" : "WINDOWS PC";
   document.getElementById("icon-left").innerText = leftHost === "mac" ? "🍎" : "🖥️";
   document.getElementById("screen-left").className = "monitor-screen " + (leftHost === "mac" ? "active-mac" : "active-pc");
-  
-  const badgeLeft = document.getElementById("badge-left");
-  badgeLeft.innerText = leftHost.toUpperCase();
-  badgeLeft.className = "monitor-badge " + (leftHost === "mac" ? "badge-mac" : "badge-pc");
 
   // Highlight active button for left
   const btnLeftMac = document.getElementById("btn-left-mac");
@@ -545,17 +621,12 @@ function render(data) {
   btnLeftMac.className = "stream-btn " + (leftHost === "mac" ? "active-stream-mac" : "");
   btnLeftPc.className = "stream-btn " + (leftHost === "pc" ? "active-stream-pc" : "");
 
-  // Update Right Display (LG ULTRAWIDE)
+  // Update Right Display Screen
   const rightDisp = data.displays.right;
   const rightHost = rightDisp.active_host;
-  document.getElementById("name-right").innerText = rightDisp.name || "LG ULTRAWIDE";
   document.getElementById("host-right").innerText = rightHost === "mac" ? "APPLE MAC" : "WINDOWS PC";
   document.getElementById("icon-right").innerText = rightHost === "mac" ? "🍎" : "🖥️";
   document.getElementById("screen-right").className = "monitor-screen " + (rightHost === "mac" ? "active-mac" : "active-pc");
-
-  const badgeRight = document.getElementById("badge-right");
-  badgeRight.innerText = rightHost.toUpperCase();
-  badgeRight.className = "monitor-badge " + (rightHost === "mac" ? "badge-mac" : "badge-pc");
 
   // Highlight active button for right
   const btnRightMac = document.getElementById("btn-right-mac");
@@ -563,12 +634,51 @@ function render(data) {
   btnRightMac.className = "stream-btn " + (rightHost === "mac" ? "active-stream-mac" : "");
   btnRightPc.className = "stream-btn " + (rightHost === "pc" ? "active-stream-pc" : "");
 
+  // Dynamic Preset Descriptions based on current dropdown mapping
+  const leftName = leftDisp.name || "Left";
+  const rightName = rightDisp.name || "Right";
+  document.getElementById("preset-desc-pc_both").innerText = `${leftName}: PC • ${rightName}: PC`;
+  document.getElementById("preset-desc-mac_both").innerText = `${leftName}: Mac • ${rightName}: Mac`;
+  document.getElementById("preset-name-split_pc_mac").innerText = `${leftName} PC • ${rightName} Mac`;
+  document.getElementById("preset-desc-split_pc_mac").innerText = `Left: PC • Right: Mac`;
+  document.getElementById("preset-name-split_mac_pc").innerText = `${leftName} Mac • ${rightName} PC`;
+  document.getElementById("preset-desc-split_mac_pc").innerText = `Left: Mac • Right: PC`;
+
   // Update Preset Cards
   const activePreset = data.current_preset;
   document.querySelectorAll(".preset-card").forEach(card => card.classList.remove("active"));
   if (activePreset && activePreset !== "custom") {
     const activeEl = document.getElementById(`preset-${activePreset}`);
     if (activeEl) activeEl.classList.add("active");
+  }
+}
+
+async function onSelectDisplay(slot, displayName) {
+  try {
+    const res = await fetch("/api/map_display", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slot: slot, display_name: displayName })
+    });
+    if (res.ok) {
+      fetchStatus();
+    }
+  } catch (e) {
+    alert("Failed to map display: " + e.message);
+  }
+}
+
+async function swapDisplays() {
+  try {
+    const res = await fetch("/api/swap_displays", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (res.ok) {
+      fetchStatus();
+    }
+  } catch (e) {
+    alert("Failed to swap displays: " + e.message);
   }
 }
 
@@ -604,7 +714,7 @@ async function applyPreset(presetId) {
 
 // Global hotkeys 1-4
 window.addEventListener("keydown", (e) => {
-  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
   switch (e.key) {
     case "1": applyPreset("pc_both"); break;
     case "2": applyPreset("mac_both"); break;
