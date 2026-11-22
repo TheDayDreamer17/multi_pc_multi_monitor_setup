@@ -64,8 +64,8 @@ DEFAULT_CONFIG = {
             "index_mac": 1,
             "index_pc": 1,
             "inputs": {
-                "mac": 27,  # USB-C / DP Alt (0x1B)
-                "pc": 17    # HDMI-1 (0x11)
+                "mac": 17,  # HDMI-1 (0x11)
+                "pc": 18    # HDMI-2 (0x12)
             }
         }
     }
