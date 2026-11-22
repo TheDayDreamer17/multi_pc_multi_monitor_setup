@@ -389,16 +389,16 @@ body {
     <section class="monitors-section">
       <div class="section-title">Active Display Routing</div>
       <div class="monitors-container">
-        <!-- Display 0 (LG ULTRAWIDE) -->
+        <!-- Display Left (GIGABYTE G24F) -->
         <div class="monitor-card" id="card-left">
           <div class="monitor-header">
-            <span class="monitor-name" id="name-left">LG ULTRAWIDE</span>
+            <span class="monitor-name" id="name-left">GIGABYTE G24F</span>
             <span class="monitor-badge" id="badge-left">DETECTING</span>
           </div>
           <div class="monitor-screen" id="screen-left">
             <div class="screen-icon" id="icon-left">🖥️</div>
             <div class="screen-host" id="host-left">DETECTING...</div>
-            <div class="screen-sub">Active Stream</div>
+            <div class="screen-sub">Left Monitor</div>
           </div>
           <div class="monitor-stand"></div>
           <div class="stream-selector">
@@ -416,16 +416,16 @@ body {
           <span class="divider-icon">⚡</span>
         </div>
 
-        <!-- Display 1 (GIGABYTE G24F) -->
+        <!-- Display Right (LG ULTRAWIDE) -->
         <div class="monitor-card" id="card-right">
           <div class="monitor-header">
-            <span class="monitor-name" id="name-right">GIGABYTE G24F</span>
+            <span class="monitor-name" id="name-right">LG ULTRAWIDE</span>
             <span class="monitor-badge" id="badge-right">DETECTING</span>
           </div>
           <div class="monitor-screen" id="screen-right">
             <div class="screen-icon" id="icon-right">🖥️</div>
             <div class="screen-host" id="host-right">DETECTING...</div>
-            <div class="screen-sub">Active Stream</div>
+            <div class="screen-sub">Right Monitor</div>
           </div>
           <div class="monitor-stand"></div>
           <div class="stream-selector">
@@ -449,7 +449,7 @@ body {
           <div class="preset-key">1</div>
           <div class="preset-icon">🖥️ 🖥️</div>
           <div class="preset-name">Both on PC</div>
-          <div class="preset-desc">LG: PC • Gigabyte: PC</div>
+          <div class="preset-desc">Gigabyte: PC • LG: PC</div>
         </div>
 
         <!-- Preset 2: Mac in Both -->
@@ -457,23 +457,23 @@ body {
           <div class="preset-key">2</div>
           <div class="preset-icon">🍎 🍎</div>
           <div class="preset-name">Both on Mac</div>
-          <div class="preset-desc">LG: Mac • Gigabyte: Mac</div>
+          <div class="preset-desc">Gigabyte: Mac • LG: Mac</div>
         </div>
 
-        <!-- Preset 3: LG PC, Gigabyte Mac -->
+        <!-- Preset 3: Gigabyte PC, LG Mac -->
         <div class="preset-card" id="preset-split_pc_mac" onclick="applyPreset('split_pc_mac')">
           <div class="preset-key">3</div>
           <div class="preset-icon">🖥️ 🍎</div>
-          <div class="preset-name">LG PC • Gigabyte Mac</div>
-          <div class="preset-desc">Workstation Split A</div>
+          <div class="preset-name">Gigabyte PC • LG Mac</div>
+          <div class="preset-desc">Left: PC • Right: Mac</div>
         </div>
 
-        <!-- Preset 4: LG Mac, Gigabyte PC -->
+        <!-- Preset 4: Gigabyte Mac, LG PC -->
         <div class="preset-card" id="preset-split_mac_pc" onclick="applyPreset('split_mac_pc')">
           <div class="preset-key">4</div>
           <div class="preset-icon">🍎 🖥️</div>
-          <div class="preset-name">LG Mac • Gigabyte PC</div>
-          <div class="preset-desc">Workstation Split B</div>
+          <div class="preset-name">Gigabyte Mac • LG PC</div>
+          <div class="preset-desc">Left: Mac • Right: PC</div>
         </div>
       </div>
     </section>
@@ -527,10 +527,10 @@ function render(data) {
     peerEndpoint.innerText = "Waiting for peer...";
   }
 
-  // Update Left Display (e.g. LG ULTRAWIDE)
+  // Update Left Display (GIGABYTE G24F)
   const leftDisp = data.displays.left;
   const leftHost = leftDisp.active_host;
-  document.getElementById("name-left").innerText = leftDisp.name || "LG ULTRAWIDE";
+  document.getElementById("name-left").innerText = leftDisp.name || "GIGABYTE G24F";
   document.getElementById("host-left").innerText = leftHost === "mac" ? "APPLE MAC" : "WINDOWS PC";
   document.getElementById("icon-left").innerText = leftHost === "mac" ? "🍎" : "🖥️";
   document.getElementById("screen-left").className = "monitor-screen " + (leftHost === "mac" ? "active-mac" : "active-pc");
@@ -545,10 +545,10 @@ function render(data) {
   btnLeftMac.className = "stream-btn " + (leftHost === "mac" ? "active-stream-mac" : "");
   btnLeftPc.className = "stream-btn " + (leftHost === "pc" ? "active-stream-pc" : "");
 
-  // Update Right Display (e.g. GIGABYTE G24F)
+  // Update Right Display (LG ULTRAWIDE)
   const rightDisp = data.displays.right;
   const rightHost = rightDisp.active_host;
-  document.getElementById("name-right").innerText = rightDisp.name || "GIGABYTE G24F";
+  document.getElementById("name-right").innerText = rightDisp.name || "LG ULTRAWIDE";
   document.getElementById("host-right").innerText = rightHost === "mac" ? "APPLE MAC" : "WINDOWS PC";
   document.getElementById("icon-right").innerText = rightHost === "mac" ? "🍎" : "🖥️";
   document.getElementById("screen-right").className = "monitor-screen " + (rightHost === "mac" ? "active-mac" : "active-pc");

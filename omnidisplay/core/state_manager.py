@@ -16,29 +16,29 @@ logger = get_logger("state_manager")
 PRESETS = {
     "pc_both": {
         "id": "pc_both",
-        "label": "PC in Both",
-        "description": "LG & GIGABYTE -> PC",
+        "label": "Both on PC",
+        "description": "GIGABYTE & LG -> PC",
         "left": "pc",
         "right": "pc"
     },
     "mac_both": {
         "id": "mac_both",
-        "label": "Mac in Both",
-        "description": "LG & GIGABYTE -> Mac",
+        "label": "Both on Mac",
+        "description": "GIGABYTE & LG -> Mac",
         "left": "mac",
         "right": "mac"
     },
     "split_pc_mac": {
         "id": "split_pc_mac",
-        "label": "LG: PC • GIGABYTE: Mac",
-        "description": "LG ULTRAWIDE -> PC, GIGABYTE G24F -> Mac",
+        "label": "GIGABYTE: PC • LG: Mac",
+        "description": "Left (GIGABYTE) -> PC, Right (LG) -> Mac",
         "left": "pc",
         "right": "mac"
     },
     "split_mac_pc": {
         "id": "split_mac_pc",
-        "label": "LG: Mac • GIGABYTE: PC",
-        "description": "LG ULTRAWIDE -> Mac, GIGABYTE G24F -> PC",
+        "label": "GIGABYTE: Mac • LG: PC",
+        "description": "Left (GIGABYTE) -> Mac, Right (LG) -> PC",
         "left": "mac",
         "right": "pc"
     }
@@ -51,21 +51,21 @@ DEFAULT_CONFIG = {
     "peer_port": 5959,
     "displays": {
         "left": {
-            "name": "LG ULTRAWIDE",
-            "index_mac": 0,
-            "index_pc": 0,
-            "inputs": {
-                "mac": 17,  # HDMI-1 (0x11)
-                "pc": 15    # DisplayPort-1 (0x0F)
-            }
-        },
-        "right": {
             "name": "GIGABYTE G24F",
             "index_mac": 1,
             "index_pc": 1,
             "inputs": {
                 "mac": 17,  # HDMI-1 (0x11)
                 "pc": 18    # HDMI-2 (0x12)
+            }
+        },
+        "right": {
+            "name": "LG ULTRAWIDE",
+            "index_mac": 0,
+            "index_pc": 0,
+            "inputs": {
+                "mac": 17,  # HDMI (0x11)
+                "pc": 15    # DisplayPort (0x0F)
             }
         }
     }
@@ -114,10 +114,19 @@ class StateManager:
                 matched_preset = preset_id
                 break
 
-        # Query detected display names from hardware EDID
+        # Match detected hardware EDID display names by configured index
         detected = self.ddc.list_displays()
-        name_0 = detected[0]["name"] if len(detected) > 0 else self.config["displays"]["left"]["name"]
-        name_1 = detected[1]["name"] if len(detected) > 1 else self.config["displays"]["right"]["name"]
+        target_idx_left = self.config["displays"]["left"]["index_mac" if self.role == "mac" else "index_pc"]
+        target_idx_right = self.config["displays"]["right"]["index_mac" if self.role == "mac" else "index_pc"]
+
+        name_left = self.config["displays"]["left"]["name"]
+        name_right = self.config["displays"]["right"]["name"]
+
+        for d in detected:
+            if d.get("index") == target_idx_left:
+                name_left = d.get("name", name_left)
+            elif d.get("index") == target_idx_right:
+                name_right = d.get("name", name_right)
 
         return {
             "role": self.role,
@@ -125,14 +134,14 @@ class StateManager:
             "current_preset": matched_preset,
             "displays": {
                 "left": {
-                    "id": "disp-0",
-                    "name": name_0,
+                    "id": f"disp-{target_idx_left}",
+                    "name": name_left,
                     "active_host": self.current_state["left"],
                     "inputs": self.config["displays"]["left"]["inputs"]
                 },
                 "right": {
-                    "id": "disp-1",
-                    "name": name_1,
+                    "id": f"disp-{target_idx_right}",
+                    "name": name_right,
                     "active_host": self.current_state["right"],
                     "inputs": self.config["displays"]["right"]["inputs"]
                 }

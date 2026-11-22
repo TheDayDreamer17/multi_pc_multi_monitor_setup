@@ -1,25 +1,25 @@
 {
-  "device_role": "pc",
+  "device_role": "auto",
   "port": 5959,
   "peer_host": "192.168.0.100",
   "peer_port": 5959,
   "displays": {
     "left": {
-      "name": "Left Monitor",
-      "index_mac": 0,
-      "index_pc": 0,
-      "inputs": {
-        "mac": 17,
-        "pc": 15
-      }
-    },
-    "right": {
-      "name": "Right Monitor",
+      "name": "GIGABYTE G24F",
       "index_mac": 1,
       "index_pc": 1,
       "inputs": {
         "mac": 17,
         "pc": 18
+      }
+    },
+    "right": {
+      "name": "LG ULTRAWIDE",
+      "index_mac": 0,
+      "index_pc": 0,
+      "inputs": {
+        "mac": 17,
+        "pc": 15
       }
     }
   }
