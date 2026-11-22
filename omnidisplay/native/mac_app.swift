@@ -25,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         window.center()
         window.minSize = NSSize(width: 740, height: 580)
+        window.delegate = self
 
         let config = WKWebViewConfiguration()
         webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
@@ -41,8 +42,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            window?.makeKeyAndOrderFront(nil)
+        }
+        return true
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
+    }
+}
+
+// Single instance check: if OmniDisplay is already running, activate it and exit immediately.
+let myPID = ProcessInfo.processInfo.processIdentifier
+for running in NSWorkspace.shared.runningApplications {
+    if running.processIdentifier != myPID {
+        let name = running.localizedName ?? ""
+        let bid = running.bundleIdentifier ?? ""
+        if bid == "com.omnidisplay.app" || name == "OmniDisplayNative" || name == "OmniDisplay" {
+            running.activate()
+            exit(0)
+        }
     }
 }
 

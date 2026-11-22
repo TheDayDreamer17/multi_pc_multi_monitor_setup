@@ -1,14 +1,17 @@
 """
-Unified Desktop GUI Launcher for OmniDisplay.
-Automatically selects between modern native WebView and native Tkinter desktop UI.
+Unified Cross-Platform Desktop GUI Launcher for OmniDisplay.
+Launches the single unified glassmorphism Web UI across macOS and Windows.
+No duplicate code: 100% of UI controls, styling, dropdowns, and presets
+are shared directly through the native Web UI.
 """
 
+import os
 import sys
 import time
+import shutil
+import subprocess
 import threading
 import urllib.request
-from omnidisplay.gui.tkinter_app import launch_tkinter_app
-from omnidisplay.gui.webview_app import launch_webview_app
 
 def is_daemon_running(port: int = 5959) -> bool:
     try:
@@ -40,16 +43,46 @@ def ensure_background_daemon(role: str = "auto", port: int = 5959, config_path: 
             name="OmniDisplayServerThread"
         )
         t.start()
-        # Give server half a second to bind
         time.sleep(0.5)
 
-def start_gui(port: int = 5959, force_tkinter: bool = False, role: str = "auto", config_path: str = None):
-    # Ensure daemon is active so GUI connects immediately
-    ensure_background_daemon(role=role, port=port, config_path=config_path)
+def launch_windows_app_mode(url: str, width: int = 920, height: int = 720) -> bool:
+    """
+    On Windows, launch Edge or Chrome in standalone native app-window mode.
+    Renders with zero browser chrome, zero address bar, and pure native window frame.
+    """
+    candidates = [
+        os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    ]
+    binary = next((p for p in candidates if os.path.exists(p)), None)
+    if not binary:
+        binary = shutil.which("msedge") or shutil.which("chrome")
 
-    # 1. On macOS, launch native compiled Cocoa application window
-    if sys.platform == "darwin" and not force_tkinter:
-        import os, subprocess
+    if binary:
+        cmd = [
+            binary,
+            f"--app={url}",
+            f"--window-size={width},{height}",
+            "--app-id=OmniDisplay"
+        ]
+        try:
+            subprocess.Popen(cmd)
+            return True
+        except Exception:
+            pass
+    return False
+
+def start_gui(port: int = 5959, role: str = "auto", config_path: str = None):
+    # 1. Ensure backend daemon is active
+    ensure_background_daemon(role=role, port=port, config_path=config_path)
+    url = f"http://127.0.0.1:{port}"
+
+    # 2. macOS: Native Cocoa WebKit window (with single-instance protection)
+    if sys.platform == "darwin":
         repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         native_app_bin = os.path.join(repo_root, "OmniDisplay.app", "Contents", "MacOS", "OmniDisplayNative")
         if os.path.exists(native_app_bin):
@@ -59,14 +92,22 @@ def start_gui(port: int = 5959, force_tkinter: bool = False, role: str = "auto",
             except Exception:
                 pass
 
-    # 2. Try pywebview if not forced to tkinter
-    if not force_tkinter:
-        success = launch_webview_app(port=port)
-        if success:
+    # 3. Windows & Cross-Platform: Try pywebview (Edge WebView2)
+    try:
+        from omnidisplay.gui.webview_app import launch_webview_app
+        if launch_webview_app(port=port):
+            return
+    except Exception:
+        pass
+
+    # 4. Windows: Try standalone chromeless App Mode (msedge.exe / chrome.exe)
+    if sys.platform == "win32":
+        if launch_windows_app_mode(url):
             return
 
-    # 3. Fall back to pure native Tkinter desktop UI
-    launch_tkinter_app(port=port)
+    # 5. Fallback: Launch system default browser
+    import webbrowser
+    webbrowser.open(url)
 
 if __name__ == "__main__":
     start_gui()

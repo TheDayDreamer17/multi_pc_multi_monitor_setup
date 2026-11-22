@@ -51,6 +51,14 @@ cat << EOF > "${APP_DIR}/Contents/MacOS/OmniDisplay"
 REPO_DIR="${REPO_DIR}"
 cd "\${REPO_DIR}"
 
+# If window is already running, activate it and exit immediately
+RUNNING_PID=\$(pgrep -f "OmniDisplayNative" | head -n 1)
+if [ -n "\$RUNNING_PID" ]; then
+    osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '\$RUNNING_PID' to true' 2>/dev/null || \
+    osascript -e 'tell application "OmniDisplay" to activate' 2>/dev/null || true
+    exit 0
+fi
+
 # Ensure background daemon is running
 if ! curl -s --connect-timeout 0.5 http://127.0.0.1:5959/api/status >/dev/null 2>&1; then
     nohup "${PYTHON_BIN}" -m omnidisplay.cli start --role mac >/tmp/omnidisplay.log 2>/tmp/omnidisplay.err &
