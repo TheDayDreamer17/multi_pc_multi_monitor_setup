@@ -260,6 +260,14 @@ class StateManager:
         if display_key not in ("left", "right"):
             return False
 
+        # If we are Mac and being asked to take the display, wake Mac displays
+        if self.role == "mac" and target_host == "mac":
+            try:
+                import subprocess
+                subprocess.run(["caffeinate", "-u", "-t", "2"], capture_output=True, timeout=1)
+            except Exception:
+                pass
+
         disp_cfg = self.config["displays"][display_key]
         target_vcp_code = disp_cfg["inputs"].get(target_host)
         idx = disp_cfg["index_mac"] if self.role == "mac" else disp_cfg["index_pc"]
