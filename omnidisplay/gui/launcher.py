@@ -53,7 +53,25 @@ def start_gui(port: int = 5959, force_tkinter: bool = False, role: str = "auto",
         if success:
             return
 
-    # 2. Fall back to pure native Tkinter desktop UI
+    # 2. On macOS, launch modern standalone desktop app window via App Mode (Brave / Chrome / Edge)
+    if sys.platform == "darwin" and not force_tkinter:
+        import os, subprocess
+        for app_name in ["Brave Browser", "Google Chrome", "Microsoft Edge", "Chromium"]:
+            app_path = f"/Applications/{app_name}.app"
+            if os.path.exists(app_path):
+                try:
+                    subprocess.Popen(["open", "-a", app_path, "--args", f"--app=http://127.0.0.1:{port}"])
+                    return
+                except Exception:
+                    pass
+        # Fallback to standard open in browser
+        try:
+            subprocess.Popen(["open", f"http://127.0.0.1:{port}"])
+            return
+        except Exception:
+            pass
+
+    # 3. Fall back to pure native Tkinter desktop UI
     launch_tkinter_app(port=port)
 
 if __name__ == "__main__":

@@ -136,7 +136,11 @@ def run_server(state_mgr: StateManager, discovery: PeerDiscovery, port: int = 59
     OmniDisplayHandler.discovery = discovery
     OmniDisplayHandler.static_dir = static_dir
 
-    server = HTTPServer(("0.0.0.0", port), OmniDisplayHandler)
+    try:
+        server = HTTPServer(("0.0.0.0", port), OmniDisplayHandler)
+    except OSError as e:
+        print(f"[Server] Note: port {port} already in use ({e}). Server already running.", flush=True)
+        return
     print(f"\n=======================================================")
     print(f"  OmniDisplay Daemon running on port {port}")
     print(f"  Web Dashboard: http://localhost:{port}")
