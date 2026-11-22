@@ -1,4 +1,4 @@
-# install-windows.ps1 - Install OmniDisplay Desktop App and Auto-Start on Windows
+﻿# install-windows.ps1 - Install OmniDisplay Desktop App and Auto-Start on Windows
 
 $ErrorActionPreference = "Stop"
 
@@ -7,7 +7,6 @@ $RepoDir = Split-Path -Parent $ScriptDir
 $StartupFolder = [System.Environment]::GetFolderPath('Startup')
 $DesktopFolder = [System.Environment]::GetFolderPath('Desktop')
 $StartupVbs = Join-Path $StartupFolder "OmniDisplay.vbs"
-$DesktopVbs = Join-Path $DesktopFolder "OmniDisplay.vbs"
 
 Write-Host "=== Installing OmniDisplay Desktop App on Windows ===" -ForegroundColor Cyan
 Write-Host "Repository: $RepoDir"
@@ -24,18 +23,19 @@ if (-not $Pythonw) {
 
 Write-Host "Using Python: $Pythonw"
 
-# 1. Launcher script for Auto-Start in background
-$StartupContent = @"
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.CurrentDirectory = "$RepoDir"
-WshShell.Run """$Pythonw"" -m omnidisplay.cli start --role pc", 0, False
-"@
+# 1. Launcher script for Auto-Start in background (avoiding here-string terminator issues)
+$line1 = 'Set WshShell = CreateObject("WScript.Shell")'
+$line2 = 'WshShell.CurrentDirectory = "' + $RepoDir + '"'
+$line3 = 'WshShell.Run """' + $Pythonw + '"" -m omnidisplay.cli start --role pc", 0, False'
+$StartupContent = $line1 + "`r`n" + $line2 + "`r`n" + $line3 + "`r`n"
+
 Set-Content -Path $StartupVbs -Value $StartupContent -Encoding ASCII
 Write-Host "✓ Auto-start registered in Windows Startup folder: $StartupVbs" -ForegroundColor Green
 
 # 2. Desktop Shortcut that opens the Desktop Software GUI
+$LnkPath = Join-Path $DesktopFolder "OmniDisplay.lnk"
 $WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut((Join-Path $DesktopFolder "OmniDisplay.lnk"))
+$Shortcut = $WshShell.CreateShortcut($LnkPath)
 $Shortcut.TargetPath = $Pythonw
 $Shortcut.Arguments = "-m omnidisplay.gui.launcher"
 $Shortcut.WorkingDirectory = $RepoDir
