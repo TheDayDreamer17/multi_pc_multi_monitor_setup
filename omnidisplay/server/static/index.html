@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniDisplay - Multi-PC Dual Monitor Coordinator</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">🎛️</div>
+        <div>
+          <h1>OmniDisplay</h1>
+          <p class="subtitle">Multi-PC Dual Monitor Controller</p>
+        </div>
+      </div>
+      <div class="status-badge" id="peer-status">
+        <span class="status-dot"></span>
+        <span id="peer-text">Searching for peer...</span>
+      </div>
+    </header>
+
+    <!-- Visual Monitor Representation -->
+    <section class="monitors-section">
+      <div class="section-title">Active Display Routing</div>
+      <div class="monitors-container">
+        <!-- Left Monitor -->
+        <div class="monitor-card" id="card-left">
+          <div class="monitor-screen" id="screen-left">
+            <div class="screen-label">Left Monitor</div>
+            <div class="screen-host" id="host-left">DETECTING...</div>
+          </div>
+          <div class="monitor-stand"></div>
+          <div class="monitor-controls">
+            <button class="btn btn-secondary" onclick="toggleDisplay('left')">
+              ⇄ Toggle to <span id="toggle-target-left">PC</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center separator / Desk layout -->
+        <div class="desk-divider">
+          <span class="divider-icon">⚡</span>
+        </div>
+
+        <!-- Right Monitor -->
+        <div class="monitor-card" id="card-right">
+          <div class="monitor-screen" id="screen-right">
+            <div class="screen-label">Right Monitor</div>
+            <div class="screen-host" id="host-right">DETECTING...</div>
+          </div>
+          <div class="monitor-stand"></div>
+          <div class="monitor-controls">
+            <button class="btn btn-secondary" onclick="toggleDisplay('right')">
+              ⇄ Toggle to <span id="toggle-target-right">PC</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Presets Grid -->
+    <section class="presets-section">
+      <div class="section-title">Quick Presets (Keys 1-4)</div>
+      <div class="presets-grid">
+        <!-- Preset 1: PC in Both -->
+        <div class="preset-card" id="preset-pc_both" onclick="applyPreset('pc_both')">
+          <div class="preset-key">1</div>
+          <div class="preset-icon">🖥️ 🖥️</div>
+          <div class="preset-name">PC in Both</div>
+          <div class="preset-desc">Left: PC • Right: PC</div>
+        </div>
+
+        <!-- Preset 2: Mac in Both -->
+        <div class="preset-card" id="preset-mac_both" onclick="applyPreset('mac_both')">
+          <div class="preset-key">2</div>
+          <div class="preset-icon">🍎 🍎</div>
+          <div class="preset-name">Mac in Both</div>
+          <div class="preset-desc">Left: Mac • Right: Mac</div>
+        </div>
+
+        <!-- Preset 3: Left PC, Right Mac -->
+        <div class="preset-card" id="preset-split_pc_mac" onclick="applyPreset('split_pc_mac')">
+          <div class="preset-key">3</div>
+          <div class="preset-icon">🖥️ 🍎</div>
+          <div class="preset-name">Left PC, Right Mac</div>
+          <div class="preset-desc">Workstation Split A</div>
+        </div>
+
+        <!-- Preset 4: Left Mac, Right PC -->
+        <div class="preset-card" id="preset-split_mac_pc" onclick="applyPreset('split_mac_pc')">
+          <div class="preset-key">4</div>
+          <div class="preset-icon">🍎 🖥️</div>
+          <div class="preset-name">Left Mac, Right PC</div>
+          <div class="preset-desc">Workstation Split B</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info & Device Details -->
+    <footer class="app-footer">
+      <div class="info-row">
+        <span>Host Node: <strong id="node-role">-</strong></span>
+        <span>•</span>
+        <span>Network Discovery: <strong id="network-status">Active</strong></span>
+        <span>•</span>
+        <span>Peer: <strong id="peer-endpoint">-</strong></span>
+      </div>
+      <div class="footer-hint">
+        Tip: You can switch presets from any device on your Wi-Fi/LAN or using terminal <code>omnidisplay switch &lt;preset&gt;</code>.
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
