@@ -1,0 +1,26 @@
+{
+  "device_role": "auto",
+  "port": 5959,
+  "peer_host": null,
+  "peer_port": 5959,
+  "displays": {
+    "left": {
+      "name": "Left Monitor",
+      "index_mac": 0,
+      "index_pc": 0,
+      "inputs": {
+        "mac": 17,
+        "pc": 15
+      }
+    },
+    "right": {
+      "name": "Right Monitor",
+      "index_mac": 1,
+      "index_pc": 1,
+      "inputs": {
+        "mac": 27,
+        "pc": 17
+      }
+    }
+  }
+}

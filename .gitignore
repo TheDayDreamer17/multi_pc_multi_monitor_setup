@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C binaries & build artifacts
+omnidisplay/native/mac_ddc
+*.o
+*.so
+*.dylib
+OmniDisplay.app/
+
+# Config local overrides
+.omnidisplay_config.json
+config.json
+
+# Logs
+*.log
+*.err
+
+# OS files
+.DS_Store
+Thumbs.db
