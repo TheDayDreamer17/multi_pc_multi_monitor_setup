@@ -38,9 +38,16 @@ class MacDDCController(DDCController):
                 res = subprocess.run([self.native_bin, "list"], capture_output=True, text=True, timeout=2)
                 if res.returncode == 0:
                     data = json.loads(res.stdout)
-                    count = data.get("count", 0)
-                    for i in range(count):
-                        displays.append({"id": f"display-{i}", "index": i, "name": f"Display {i + 1}", "driver": "native"})
+                    for d in data.get("displays", []):
+                        displays.append({
+                            "id": f"display-{d.get('index')}",
+                            "index": d.get("index"),
+                            "name": d.get("name", f"Display {d.get('index') + 1}"),
+                            "driver": "native"
+                        })
+                    if not displays and data.get("count", 0) > 0:
+                        for i in range(data["count"]):
+                            displays.append({"id": f"display-{i}", "index": i, "name": f"Display {i + 1}", "driver": "native"})
             except Exception:
                 pass
 
@@ -54,12 +61,26 @@ class MacDDCController(DDCController):
             except Exception:
                 pass
 
+        # Try system_profiler fallback for monitor names
+        if not displays:
+            try:
+                res = subprocess.run(["system_profiler", "SPDisplaysDataType", "-json"], capture_output=True, text=True, timeout=3)
+                if res.returncode == 0:
+                    data = json.loads(res.stdout)
+                    idx = 0
+                    for item in data.get("SPDisplaysDataType", []):
+                        for disp in item.get("spdisplays_ndrvs", []):
+                            name = disp.get("_name", f"Display {idx + 1}")
+                            displays.append({"id": f"display-{idx}", "index": idx, "name": name, "driver": "system_profiler"})
+                            idx += 1
+            except Exception:
+                pass
+
         # If zero detected (e.g. running inside sandbox or headless test environment)
         if not displays:
-            # Query CoreGraphics online display count via system_profiler or CG
             displays = [
-                {"id": "display-left", "index": 0, "name": "Left Monitor (External)", "driver": "simulated"},
-                {"id": "display-right", "index": 1, "name": "Right Monitor (External)", "driver": "simulated"}
+                {"id": "display-left", "index": 0, "name": "LG ULTRAWIDE", "driver": "default"},
+                {"id": "display-right", "index": 1, "name": "GIGABYTE G24F", "driver": "default"}
             ]
 
         return displays

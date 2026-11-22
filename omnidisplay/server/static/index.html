@@ -9,7 +9,7 @@
   <style>
 :root {
   --bg-color: #0d1117;
-  --card-bg: rgba(22, 27, 34, 0.95);
+  --card-bg: rgba(22, 27, 34, 0.96);
   --card-border: #30363d;
   --text-main: #f0f6fc;
   --text-muted: #8b949e;
@@ -39,7 +39,7 @@ body {
 
 .app-container {
   width: 100%;
-  max-width: 880px;
+  max-width: 900px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 18px;
@@ -52,7 +52,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   border-bottom: 1px solid var(--card-border);
   padding-bottom: 20px;
 }
@@ -107,7 +107,7 @@ body {
 }
 
 .section-title {
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
@@ -121,20 +121,57 @@ body {
   justify-content: center;
   align-items: center;
   gap: 24px;
-  margin-bottom: 36px;
+  margin-bottom: 34px;
 }
 
 .monitor-card {
   flex: 1;
-  max-width: 320px;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+.monitor-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.monitor-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+}
+
+.monitor-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.monitor-badge.badge-mac {
+  background: rgba(240, 136, 62, 0.2);
+  color: #ff9b57;
+  border: 1px solid rgba(240, 136, 62, 0.4);
+}
+
+.monitor-badge.badge-pc {
+  background: rgba(88, 166, 255, 0.2);
+  color: #79b8ff;
+  border: 1px solid rgba(88, 166, 255, 0.4);
+}
+
 .monitor-screen {
   width: 100%;
-  height: 160px;
+  height: 150px;
   border-radius: 12px;
   background: #1c2128;
   border: 3px solid #30363d;
@@ -149,43 +186,50 @@ body {
 
 .monitor-screen.active-mac {
   border-color: var(--accent-orange);
-  background: radial-gradient(circle at center, rgba(240, 136, 62, 0.15) 0%, #161b22 100%);
-  box-shadow: 0 0 20px rgba(240, 136, 62, 0.2);
+  background: radial-gradient(circle at center, rgba(240, 136, 62, 0.18) 0%, #161b22 100%);
+  box-shadow: 0 0 20px rgba(240, 136, 62, 0.25);
 }
 
 .monitor-screen.active-pc {
   border-color: var(--accent-blue);
-  background: radial-gradient(circle at center, rgba(88, 166, 255, 0.15) 0%, #161b22 100%);
-  box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+  background: radial-gradient(circle at center, rgba(88, 166, 255, 0.18) 0%, #161b22 100%);
+  box-shadow: 0 0 20px rgba(88, 166, 255, 0.25);
 }
 
-.screen-label {
-  font-size: 13px;
-  color: var(--text-muted);
+.screen-icon {
+  font-size: 30px;
   margin-bottom: 6px;
 }
 
 .screen-host {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
+.screen-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
 .monitor-stand {
   width: 50px;
-  height: 20px;
+  height: 18px;
   background: #30363d;
   border-radius: 0 0 4px 4px;
   margin-bottom: 12px;
 }
 
-.monitor-controls {
+.stream-selector {
   width: 100%;
+  display: flex;
+  gap: 10px;
 }
 
-.btn {
-  width: 100%;
-  padding: 10px 16px;
+.stream-btn {
+  flex: 1;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--card-border);
   background: #21262d;
@@ -194,16 +238,35 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.btn:hover {
+.stream-btn:hover {
   background: #30363d;
   border-color: #8b949e;
+}
+
+.stream-btn.active-stream-mac {
+  background: linear-gradient(135deg, rgba(240, 136, 62, 0.25), rgba(240, 136, 62, 0.1));
+  border-color: var(--accent-orange);
+  color: #ffa657;
+  box-shadow: 0 0 12px rgba(240, 136, 62, 0.35);
+}
+
+.stream-btn.active-stream-pc {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.25), rgba(88, 166, 255, 0.1));
+  border-color: var(--accent-blue);
+  color: #79b8ff;
+  box-shadow: 0 0 12px rgba(88, 166, 255, 0.35);
 }
 
 .desk-divider {
   font-size: 20px;
   color: var(--text-muted);
+  padding-top: 20px;
 }
 
 /* Presets Grid */
@@ -211,7 +274,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .preset-card {
@@ -219,7 +282,7 @@ body {
   background: #161b22;
   border: 1px solid var(--card-border);
   border-radius: 14px;
-  padding: 20px 16px;
+  padding: 18px 14px;
   text-align: center;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -251,8 +314,8 @@ body {
 }
 
 .preset-icon {
-  font-size: 26px;
-  margin-bottom: 12px;
+  font-size: 24px;
+  margin-bottom: 10px;
 }
 
 .preset-name {
@@ -291,17 +354,10 @@ body {
   color: #6e7681;
 }
 
-code {
-  background: rgba(110, 118, 129, 0.2);
-  padding: 2px 5px;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
 @media (max-width: 680px) {
   .monitors-container {
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
   }
   .desk-divider {
     display: none;
@@ -320,7 +376,7 @@ code {
         <div class="logo-icon">🎛️</div>
         <div>
           <h1>OmniDisplay</h1>
-          <p class="subtitle">Multi-PC Dual Monitor Controller</p>
+          <p class="subtitle">Multi-PC Dual Monitor Coordinator</p>
         </div>
       </div>
       <div class="status-badge" id="peer-status">
@@ -333,16 +389,24 @@ code {
     <section class="monitors-section">
       <div class="section-title">Active Display Routing</div>
       <div class="monitors-container">
-        <!-- Left Monitor -->
+        <!-- Display 0 (LG ULTRAWIDE) -->
         <div class="monitor-card" id="card-left">
+          <div class="monitor-header">
+            <span class="monitor-name" id="name-left">LG ULTRAWIDE</span>
+            <span class="monitor-badge" id="badge-left">DETECTING</span>
+          </div>
           <div class="monitor-screen" id="screen-left">
-            <div class="screen-label">Left Monitor</div>
+            <div class="screen-icon" id="icon-left">🖥️</div>
             <div class="screen-host" id="host-left">DETECTING...</div>
+            <div class="screen-sub">Active Stream</div>
           </div>
           <div class="monitor-stand"></div>
-          <div class="monitor-controls">
-            <button class="btn btn-secondary" onclick="toggleDisplay('left')">
-              ⇄ Toggle to <span id="toggle-target-left">PC</span>
+          <div class="stream-selector">
+            <button class="stream-btn" id="btn-left-mac" onclick="setHost('left', 'mac')">
+              🍎 Show Mac
+            </button>
+            <button class="stream-btn" id="btn-left-pc" onclick="setHost('left', 'pc')">
+              🖥️ Show PC
             </button>
           </div>
         </div>
@@ -352,16 +416,24 @@ code {
           <span class="divider-icon">⚡</span>
         </div>
 
-        <!-- Right Monitor -->
+        <!-- Display 1 (GIGABYTE G24F) -->
         <div class="monitor-card" id="card-right">
+          <div class="monitor-header">
+            <span class="monitor-name" id="name-right">GIGABYTE G24F</span>
+            <span class="monitor-badge" id="badge-right">DETECTING</span>
+          </div>
           <div class="monitor-screen" id="screen-right">
-            <div class="screen-label">Right Monitor</div>
+            <div class="screen-icon" id="icon-right">🖥️</div>
             <div class="screen-host" id="host-right">DETECTING...</div>
+            <div class="screen-sub">Active Stream</div>
           </div>
           <div class="monitor-stand"></div>
-          <div class="monitor-controls">
-            <button class="btn btn-secondary" onclick="toggleDisplay('right')">
-              ⇄ Toggle to <span id="toggle-target-right">PC</span>
+          <div class="stream-selector">
+            <button class="stream-btn" id="btn-right-mac" onclick="setHost('right', 'mac')">
+              🍎 Show Mac
+            </button>
+            <button class="stream-btn" id="btn-right-pc" onclick="setHost('right', 'pc')">
+              🖥️ Show PC
             </button>
           </div>
         </div>
@@ -376,31 +448,31 @@ code {
         <div class="preset-card" id="preset-pc_both" onclick="applyPreset('pc_both')">
           <div class="preset-key">1</div>
           <div class="preset-icon">🖥️ 🖥️</div>
-          <div class="preset-name">PC in Both</div>
-          <div class="preset-desc">Left: PC • Right: PC</div>
+          <div class="preset-name">Both on PC</div>
+          <div class="preset-desc">LG: PC • Gigabyte: PC</div>
         </div>
 
         <!-- Preset 2: Mac in Both -->
         <div class="preset-card" id="preset-mac_both" onclick="applyPreset('mac_both')">
           <div class="preset-key">2</div>
           <div class="preset-icon">🍎 🍎</div>
-          <div class="preset-name">Mac in Both</div>
-          <div class="preset-desc">Left: Mac • Right: Mac</div>
+          <div class="preset-name">Both on Mac</div>
+          <div class="preset-desc">LG: Mac • Gigabyte: Mac</div>
         </div>
 
-        <!-- Preset 3: Left PC, Right Mac -->
+        <!-- Preset 3: LG PC, Gigabyte Mac -->
         <div class="preset-card" id="preset-split_pc_mac" onclick="applyPreset('split_pc_mac')">
           <div class="preset-key">3</div>
           <div class="preset-icon">🖥️ 🍎</div>
-          <div class="preset-name">Left PC, Right Mac</div>
+          <div class="preset-name">LG PC • Gigabyte Mac</div>
           <div class="preset-desc">Workstation Split A</div>
         </div>
 
-        <!-- Preset 4: Left Mac, Right PC -->
+        <!-- Preset 4: LG Mac, Gigabyte PC -->
         <div class="preset-card" id="preset-split_mac_pc" onclick="applyPreset('split_mac_pc')">
           <div class="preset-key">4</div>
           <div class="preset-icon">🍎 🖥️</div>
-          <div class="preset-name">Left Mac, Right PC</div>
+          <div class="preset-name">LG Mac • Gigabyte PC</div>
           <div class="preset-desc">Workstation Split B</div>
         </div>
       </div>
@@ -409,9 +481,9 @@ code {
     <!-- Info & Device Details -->
     <footer class="app-footer">
       <div class="info-row">
-        <span>Host Node: <strong id="node-role">-</strong></span>
+        <span>This Machine: <strong id="node-role">-</strong></span>
         <span>•</span>
-        <span>Network Discovery: <strong id="network-status">Active</strong></span>
+        <span>LAN Discovery: <strong id="network-status">Active</strong></span>
         <span>•</span>
         <span>Peer: <strong id="peer-endpoint">-</strong></span>
       </div>
@@ -455,25 +527,41 @@ function render(data) {
     peerEndpoint.innerText = "Waiting for peer...";
   }
 
-  // Update Left Monitor
-  const leftHost = data.displays.left.active_host;
-  const screenLeft = document.getElementById("screen-left");
-  const hostLeft = document.getElementById("host-left");
-  const toggleLeft = document.getElementById("toggle-target-left");
+  // Update Left Display (e.g. LG ULTRAWIDE)
+  const leftDisp = data.displays.left;
+  const leftHost = leftDisp.active_host;
+  document.getElementById("name-left").innerText = leftDisp.name || "LG ULTRAWIDE";
+  document.getElementById("host-left").innerText = leftHost === "mac" ? "APPLE MAC" : "WINDOWS PC";
+  document.getElementById("icon-left").innerText = leftHost === "mac" ? "🍎" : "🖥️";
+  document.getElementById("screen-left").className = "monitor-screen " + (leftHost === "mac" ? "active-mac" : "active-pc");
+  
+  const badgeLeft = document.getElementById("badge-left");
+  badgeLeft.innerText = leftHost.toUpperCase();
+  badgeLeft.className = "monitor-badge " + (leftHost === "mac" ? "badge-mac" : "badge-pc");
 
-  hostLeft.innerText = leftHost.toUpperCase();
-  screenLeft.className = "monitor-screen " + (leftHost === "mac" ? "active-mac" : "active-pc");
-  toggleLeft.innerText = leftHost === "mac" ? "PC" : "Mac";
+  // Highlight active button for left
+  const btnLeftMac = document.getElementById("btn-left-mac");
+  const btnLeftPc = document.getElementById("btn-left-pc");
+  btnLeftMac.className = "stream-btn " + (leftHost === "mac" ? "active-stream-mac" : "");
+  btnLeftPc.className = "stream-btn " + (leftHost === "pc" ? "active-stream-pc" : "");
 
-  // Update Right Monitor
-  const rightHost = data.displays.right.active_host;
-  const screenRight = document.getElementById("screen-right");
-  const hostRight = document.getElementById("host-right");
-  const toggleRight = document.getElementById("toggle-target-right");
+  // Update Right Display (e.g. GIGABYTE G24F)
+  const rightDisp = data.displays.right;
+  const rightHost = rightDisp.active_host;
+  document.getElementById("name-right").innerText = rightDisp.name || "GIGABYTE G24F";
+  document.getElementById("host-right").innerText = rightHost === "mac" ? "APPLE MAC" : "WINDOWS PC";
+  document.getElementById("icon-right").innerText = rightHost === "mac" ? "🍎" : "🖥️";
+  document.getElementById("screen-right").className = "monitor-screen " + (rightHost === "mac" ? "active-mac" : "active-pc");
 
-  hostRight.innerText = rightHost.toUpperCase();
-  screenRight.className = "monitor-screen " + (rightHost === "mac" ? "active-mac" : "active-pc");
-  toggleRight.innerText = rightHost === "mac" ? "PC" : "Mac";
+  const badgeRight = document.getElementById("badge-right");
+  badgeRight.innerText = rightHost.toUpperCase();
+  badgeRight.className = "monitor-badge " + (rightHost === "mac" ? "badge-mac" : "badge-pc");
+
+  // Highlight active button for right
+  const btnRightMac = document.getElementById("btn-right-mac");
+  const btnRightPc = document.getElementById("btn-right-pc");
+  btnRightMac.className = "stream-btn " + (rightHost === "mac" ? "active-stream-mac" : "");
+  btnRightPc.className = "stream-btn " + (rightHost === "pc" ? "active-stream-pc" : "");
 
   // Update Preset Cards
   const activePreset = data.current_preset;
@@ -481,6 +569,21 @@ function render(data) {
   if (activePreset && activePreset !== "custom") {
     const activeEl = document.getElementById(`preset-${activePreset}`);
     if (activeEl) activeEl.classList.add("active");
+  }
+}
+
+async function setHost(displayKey, targetHost) {
+  try {
+    const res = await fetch("/api/set_display", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ display: displayKey, target_host: targetHost })
+    });
+    if (res.ok) {
+      fetchStatus();
+    }
+  } catch (e) {
+    alert("Failed to switch display stream: " + e.message);
   }
 }
 
@@ -499,25 +602,6 @@ async function applyPreset(presetId) {
   }
 }
 
-async function toggleDisplay(displayKey) {
-  if (!currentStatus) return;
-  const currentHost = currentStatus.displays[displayKey].active_host;
-  const targetHost = currentHost === "mac" ? "pc" : "mac";
-
-  try {
-    const res = await fetch("/api/set_display", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ display: displayKey, target_host: targetHost })
-    });
-    if (res.ok) {
-      fetchStatus();
-    }
-  } catch (e) {
-    alert("Failed to toggle display: " + e.message);
-  }
-}
-
 // Global hotkeys 1-4
 window.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
@@ -530,7 +614,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 fetchStatus();
-setInterval(fetchStatus, 2000);
+setInterval(fetchStatus, 1500);
   </script>
 </body>
 </html>

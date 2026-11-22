@@ -16,11 +16,30 @@ typedef CFTypeRef IOAVServiceRef;
 extern IOAVServiceRef IOAVServiceCreateWithService(CFAllocatorRef allocator, io_service_t service);
 extern IOReturn IOAVServiceWriteI2C(IOAVServiceRef service, uint32_t chipAddress, uint32_t dataAddress, void *inputBuffer, uint32_t inputBufferSize);
 extern IOReturn IOAVServiceReadI2C(IOAVServiceRef service, uint32_t chipAddress, uint32_t offset, void *outputBuffer, uint32_t outputBufferSize);
+extern IOReturn IOAVServiceCopyEDID(IOAVServiceRef service, CFDataRef *edidData);
 
 #define MAX_DISPLAYS 16
 
 static IOAVServiceRef g_services[MAX_DISPLAYS];
+static char g_display_names[MAX_DISPLAYS][64];
 static int g_service_count = 0;
+
+static void extract_edid_name(const uint8_t *edid, size_t len, char *name_out) {
+    strcpy(name_out, "External Display");
+    if (len < 128) return;
+    for (int block = 54; block <= 108; block += 18) {
+        if (edid[block] == 0x00 && edid[block+1] == 0x00 && edid[block+2] == 0x00 && edid[block+3] == 0xFC) {
+            int idx = 0;
+            for (int i = 5; i < 18; i++) {
+                char c = (char)edid[block + i];
+                if (c == 0x0A || c == 0x00) break;
+                name_out[idx++] = c;
+            }
+            name_out[idx] = '\0';
+            return;
+        }
+    }
+}
 
 static void discover_displays(void) {
     g_service_count = 0;
@@ -35,7 +54,17 @@ static void discover_displays(void) {
     while ((serv = IOIteratorNext(iter)) != 0 && g_service_count < MAX_DISPLAYS) {
         IOAVServiceRef av = IOAVServiceCreateWithService(kCFAllocatorDefault, serv);
         if (av) {
-            g_services[g_service_count++] = av;
+            g_services[g_service_count] = av;
+            
+            // Extract EDID monitor name
+            CFDataRef edid = NULL;
+            char name[64] = "External Display";
+            if (IOAVServiceCopyEDID(av, &edid) == kIOReturnSuccess && edid) {
+                extract_edid_name(CFDataGetBytePtr(edid), CFDataGetLength(edid), name);
+                CFRelease(edid);
+            }
+            strncpy(g_display_names[g_service_count], name, 63);
+            g_service_count++;
         }
         IOObjectRelease(serv);
     }
@@ -54,7 +83,7 @@ static bool set_vcp(IOAVServiceRef service, uint8_t vcp, uint16_t value) {
     packet[3] = (uint8_t)((value >> 8) & 0xFF);
     packet[4] = (uint8_t)(value & 0xFF);
 
-    // DDC/CI XOR checksum starting with 0x6E (7-bit address 0x37 shifted left) and 0x51
+    // DDC/CI XOR checksum starting with 0x6E and 0x51
     uint8_t chk = 0x6E ^ 0x51 ^ packet[0] ^ packet[1] ^ packet[2] ^ packet[3] ^ packet[4];
     packet[5] = chk;
 
@@ -72,7 +101,11 @@ int main(int argc, char *argv[]) {
     discover_displays();
 
     if (strcmp(argv[1], "list") == 0) {
-        printf("{\"count\": %d}\n", g_service_count);
+        printf("{\"count\": %d, \"displays\": [", g_service_count);
+        for (int i = 0; i < g_service_count; i++) {
+            printf("{\"index\": %d, \"name\": \"%s\"}%s", i, g_display_names[i], (i + 1 < g_service_count) ? ", " : "");
+        }
+        printf("]}\n");
         return 0;
     }
 
@@ -92,7 +125,7 @@ int main(int argc, char *argv[]) {
 
         bool ok = set_vcp(g_services[idx], vcp, val);
         if (ok) {
-            printf("{\"status\": \"ok\", \"display\": %d, \"vcp\": %u, \"value\": %u}\n", idx, vcp, val);
+            printf("{\"status\": \"ok\", \"display\": %d, \"name\": \"%s\", \"vcp\": %u, \"value\": %u}\n", idx, g_display_names[idx], vcp, val);
             return 0;
         } else {
             fprintf(stderr, "{\"status\": \"error\", \"message\": \"IOAVServiceWriteI2C failed\"}\n");

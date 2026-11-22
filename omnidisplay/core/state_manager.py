@@ -17,28 +17,28 @@ PRESETS = {
     "pc_both": {
         "id": "pc_both",
         "label": "PC in Both",
-        "description": "Left Monitor -> PC, Right Monitor -> PC",
+        "description": "LG & GIGABYTE -> PC",
         "left": "pc",
         "right": "pc"
     },
     "mac_both": {
         "id": "mac_both",
         "label": "Mac in Both",
-        "description": "Left Monitor -> Mac, Right Monitor -> Mac",
+        "description": "LG & GIGABYTE -> Mac",
         "left": "mac",
         "right": "mac"
     },
     "split_pc_mac": {
         "id": "split_pc_mac",
-        "label": "Left PC, Right Mac",
-        "description": "Left Monitor -> PC, Right Monitor -> Mac",
+        "label": "LG: PC • GIGABYTE: Mac",
+        "description": "LG ULTRAWIDE -> PC, GIGABYTE G24F -> Mac",
         "left": "pc",
         "right": "mac"
     },
     "split_mac_pc": {
         "id": "split_mac_pc",
-        "label": "Left Mac, Right PC",
-        "description": "Left Monitor -> Mac, Right Monitor -> PC",
+        "label": "LG: Mac • GIGABYTE: PC",
+        "description": "LG ULTRAWIDE -> Mac, GIGABYTE G24F -> PC",
         "left": "mac",
         "right": "pc"
     }
@@ -51,7 +51,7 @@ DEFAULT_CONFIG = {
     "peer_port": 5959,
     "displays": {
         "left": {
-            "name": "Left Monitor",
+            "name": "LG ULTRAWIDE",
             "index_mac": 0,
             "index_pc": 0,
             "inputs": {
@@ -60,7 +60,7 @@ DEFAULT_CONFIG = {
             }
         },
         "right": {
-            "name": "Right Monitor",
+            "name": "GIGABYTE G24F",
             "index_mac": 1,
             "index_pc": 1,
             "inputs": {
@@ -114,18 +114,25 @@ class StateManager:
                 matched_preset = preset_id
                 break
 
+        # Query detected display names from hardware EDID
+        detected = self.ddc.list_displays()
+        name_0 = detected[0]["name"] if len(detected) > 0 else self.config["displays"]["left"]["name"]
+        name_1 = detected[1]["name"] if len(detected) > 1 else self.config["displays"]["right"]["name"]
+
         return {
             "role": self.role,
             "peer_url": self.peer_url,
             "current_preset": matched_preset,
             "displays": {
                 "left": {
-                    "name": self.config["displays"]["left"]["name"],
+                    "id": "disp-0",
+                    "name": name_0,
                     "active_host": self.current_state["left"],
                     "inputs": self.config["displays"]["left"]["inputs"]
                 },
                 "right": {
-                    "name": self.config["displays"]["right"]["name"],
+                    "id": "disp-1",
+                    "name": name_1,
                     "active_host": self.current_state["right"],
                     "inputs": self.config["displays"]["right"]["inputs"]
                 }
