@@ -1,7 +1,7 @@
 {
-  "device_role": "auto",
+  "device_role": "pc",
   "port": 5959,
-  "peer_host": null,
+  "peer_host": "192.168.0.100",
   "peer_port": 5959,
   "displays": {
     "left": {
@@ -18,8 +18,8 @@
       "index_mac": 1,
       "index_pc": 1,
       "inputs": {
-        "mac": 27,
-        "pc": 17
+        "mac": 17,
+        "pc": 18
       }
     }
   }

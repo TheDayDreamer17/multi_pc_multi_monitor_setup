@@ -4,6 +4,7 @@ Command Line Interface (CLI) for OmniDisplay.
 
 import sys
 import os
+import time
 import argparse
 import json
 import urllib.request
@@ -45,6 +46,20 @@ def send_local_api(endpoint: str, data: dict = None) -> dict:
         return {}
 
 def cmd_start(args):
+    import traceback
+    def _log_err(exc_type, exc_val, exc_tb):
+        try:
+            with open(os.path.expanduser("~/.omnidisplay_daemon.log"), "a", encoding="utf-8") as f:
+                f.write(f"\n--- Unhandled Exception {time.ctime()} ---\n")
+                traceback.print_exception(exc_type, exc_val, exc_tb, file=f)
+        except Exception:
+            pass
+
+    sys.excepthook = _log_err
+    import threading
+    if hasattr(threading, "excepthook"):
+        threading.excepthook = lambda args: _log_err(args.exc_type, args.exc_value, args.exc_traceback)
+
     role = args.role if args.role != "auto" else detect_role()
     port = args.port
     ddc = get_platform_ddc()
@@ -60,6 +75,7 @@ def cmd_start(args):
     if static_peer:
         peer_port = state_mgr.config.get("peer_port", 5959)
         state_mgr.set_peer_endpoint(static_peer, peer_port)
+        discovery.set_static_peer(static_peer, peer_port)
 
     run_server(state_mgr, discovery, port=port)
 
@@ -131,6 +147,16 @@ def cmd_probe(args):
     for d in displays:
         print(f"  [{d.get('index', 0)}] {d.get('name')} (Driver: {d.get('driver')})")
 
+def cmd_logs(args):
+    res = send_local_api(f"/api/logs?lines={args.lines}")
+    if res and "logs" in res:
+        for line in res["logs"]:
+            print(line)
+    else:
+        from omnidisplay.core.logger import get_recent_logs
+        for line in get_recent_logs(lines=args.lines):
+            print(line)
+
 def main():
     parser = argparse.ArgumentParser(description="OmniDisplay Dual-PC Monitor Switcher")
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
@@ -161,6 +187,10 @@ def main():
     # probe
     subparsers.add_parser("probe", help="Probe connected displays")
 
+    # logs
+    p_logs = subparsers.add_parser("logs", help="View recent daemon activity logs")
+    p_logs.add_argument("-n", "--lines", type=int, default=50, help="Number of log lines to show (default: 50)")
+
     args = parser.parse_args()
     if not args.command:
         # Default action when double-clicked or invoked bare: start Desktop GUI
@@ -187,6 +217,8 @@ def main():
         cmd_status(args)
     elif args.command == "probe":
         cmd_probe(args)
+    elif args.command == "logs":
+        cmd_logs(args)
 
 if __name__ == "__main__":
     main()

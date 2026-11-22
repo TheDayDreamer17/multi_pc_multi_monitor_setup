@@ -9,6 +9,9 @@ import urllib.request
 import urllib.error
 from typing import Dict, Any, Optional
 from omnidisplay.core.ddc_base import DDCController
+from omnidisplay.core.logger import get_logger
+
+logger = get_logger("state_manager")
 
 PRESETS = {
     "pc_both": {
@@ -101,7 +104,7 @@ class StateManager:
 
     def set_peer_endpoint(self, host: str, port: int):
         self.peer_url = f"http://{host}:{port}"
-        print(f"[StateManager] Peer endpoint updated: {self.peer_url}")
+        logger.info(f"Peer endpoint updated: {self.peer_url}")
 
     def get_status(self) -> Dict[str, Any]:
         matched_preset = "custom"
@@ -136,7 +139,7 @@ class StateManager:
             raise ValueError(f"Unknown preset: {preset_id}. Choose from: {list(PRESETS.keys())}")
 
         target = PRESETS[preset_id]
-        print(f"[StateManager] Applying preset '{preset_id}' -> Left: {target['left']}, Right: {target['right']}")
+        logger.info(f"Applying preset '{preset_id}' -> Left: {target['left']}, Right: {target['right']}")
         success_left = self.set_display_host("left", target["left"], sync_peer=False)
         success_right = self.set_display_host("right", target["right"], sync_peer=False)
 
@@ -164,15 +167,15 @@ class StateManager:
         # If current node is the host actively holding the display:
         # We can issue local DDC command directly!
         if current_host == self.role:
-            print(f"[StateManager] Local DDC switch: {display_key} ({idx}) -> {target_host} (code {target_vcp_code})", flush=True)
+            logger.info(f"Local DDC switch: {display_key} (idx {idx}) -> {target_host} (vcp 0x{target_vcp_code:X})")
             self.ddc.set_input_source(idx, target_vcp_code)
         else:
             # The display is currently with the peer!
             # Relay request to peer so the peer sends the DDC command from its active port!
-            print(f"[StateManager] Relay switch request to peer for {display_key} -> {target_host}", flush=True)
+            logger.info(f"Relay switch request to peer for {display_key} -> {target_host}")
             self._relay_to_peer(display_key, target_host)
             # Also attempt local DDC as fallback in case monitor listens to local port or peer is offline
-            print(f"[StateManager] Fallback local DDC attempt for {display_key} ({idx}) -> {target_host} (code {target_vcp_code})", flush=True)
+            logger.info(f"Fallback local DDC attempt for {display_key} (idx {idx}) -> {target_host} (vcp 0x{target_vcp_code:X})")
             self.ddc.set_input_source(idx, target_vcp_code)
 
         self.current_state[display_key] = target_host
@@ -191,14 +194,14 @@ class StateManager:
         target_vcp_code = disp_cfg["inputs"].get(target_host)
         idx = disp_cfg["index_mac"] if self.role == "mac" else disp_cfg["index_pc"]
 
-        print(f"[StateManager] Executing peer-relayed switch: {display_key} -> VCP {target_vcp_code}")
+        logger.info(f"Executing peer-relayed switch: {display_key} (idx {idx}) -> {target_host} (vcp 0x{target_vcp_code:X})")
         self.ddc.set_input_source(idx, target_vcp_code)
         self.current_state[display_key] = target_host
         return True
 
     def _relay_to_peer(self, display_key: str, target_host: str):
         if not self.peer_url:
-            print("[StateManager] Warning: Cannot relay to peer; peer_url not established.")
+            logger.warning("Cannot relay to peer; peer_url not established.")
             return
 
         url = f"{self.peer_url}/api/relay_switch"
@@ -206,9 +209,9 @@ class StateManager:
         req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=2.5) as resp:
-                pass
+                logger.info(f"Relayed switch to peer successful: {display_key} -> {target_host}")
         except Exception as e:
-            print(f"[StateManager] Error relaying command to peer: {e}")
+            logger.error(f"Error relaying command to peer: {e}")
 
     def _sync_state_to_peer(self):
         if not self.peer_url:
@@ -220,10 +223,11 @@ class StateManager:
         try:
             with urllib.request.urlopen(req, timeout=2.0) as resp:
                 pass
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed syncing state to peer: {e}")
 
     def update_state_from_peer(self, state: Dict[str, str]):
         if "left" in state and "right" in state:
+            logger.info(f"State sync received from peer: {state}")
             self.current_state["left"] = state["left"]
             self.current_state["right"] = state["right"]

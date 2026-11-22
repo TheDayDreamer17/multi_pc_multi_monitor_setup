@@ -29,6 +29,11 @@ class PeerDiscovery:
     def set_on_discovered_callback(self, callback: Callable[[str, int, str], None]):
         self._on_peer_discovered = callback
 
+    def set_static_peer(self, host: str, port: int):
+        self.peer_host = host
+        self.peer_port = port
+        self.last_seen = time.time()
+
     def start(self):
         self.running = True
         self.beacon_thread = threading.Thread(target=self._broadcast_loop, daemon=True, name="BeaconBroadcast")

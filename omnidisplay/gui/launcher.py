@@ -12,7 +12,7 @@ from omnidisplay.gui.webview_app import launch_webview_app
 
 def is_daemon_running(port: int = 5959) -> bool:
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/status", timeout=0.8) as resp:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/status", timeout=1.5) as resp:
             return resp.status == 200
     except Exception:
         return False

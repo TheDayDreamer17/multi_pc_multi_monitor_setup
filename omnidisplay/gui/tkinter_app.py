@@ -278,6 +278,11 @@ class OmniDisplayTkinterApp:
         self.lbl_footer_info.config(text=f"Host Node: {role} • Daemon: http://127.0.0.1:{self.server_port}")
 
 def launch_tkinter_app(port: int = 5959):
+    try:
+        from omnidisplay.gui.launcher import ensure_background_daemon
+        ensure_background_daemon(port=port)
+    except Exception:
+        pass
     root = tk.Tk()
     app = OmniDisplayTkinterApp(root, server_port=port)
     root.mainloop()

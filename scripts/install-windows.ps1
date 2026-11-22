@@ -11,14 +11,25 @@ $StartupVbs = Join-Path $StartupFolder "OmniDisplay.vbs"
 Write-Host "=== Installing OmniDisplay Desktop App on Windows ===" -ForegroundColor Cyan
 Write-Host "Repository: $RepoDir"
 
-# Find pythonw.exe or python.exe (pythonw runs without popping up a black console window)
-$Pythonw = (Get-Command pythonw.exe -ErrorAction SilentlyContinue).Source
+# Find pythonw.exe or python.exe (excluding WindowsApps shim which can fail with 'file cannot be accessed')
+$Pythonw = (Get-Command pythonw.exe -All -ErrorAction SilentlyContinue | Where-Object { $_.Source -notmatch "WindowsApps" } | Select-Object -First 1).Source
 if (-not $Pythonw) {
-    $Python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
-    if (-not $Python) {
-        Write-Error "Python 3 was not found in PATH. Please install Python 3 on Windows."
+    $Pythonw = (Get-Command python.exe -All -ErrorAction SilentlyContinue | Where-Object { $_.Source -notmatch "WindowsApps" } | Select-Object -First 1).Source
+}
+if (-not $Pythonw) {
+    $candidates = @(
+        "$env:LOCALAPPDATA\Python\bin\pythonw.exe",
+        "$env:LOCALAPPDATA\Python\bin\python.exe",
+        "$env:ProgramFiles\Python*\pythonw.exe",
+        "$env:LOCALAPPDATA\Programs\Python\Python*\pythonw.exe"
+    )
+    foreach ($cand in $candidates) {
+        $found = Resolve-Path $cand -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($found) { $Pythonw = $found.Path; break }
     }
-    $Pythonw = $Python
+}
+if (-not $Pythonw) {
+    Write-Error "Python 3 was not found in PATH. Please install Python 3 on Windows."
 }
 
 Write-Host "Using Python: $Pythonw"
