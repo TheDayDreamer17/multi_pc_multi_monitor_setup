@@ -170,8 +170,25 @@ class StateManager:
         return True
 
     def set_peer_endpoint(self, host: str, port: int):
-        self.peer_url = f"http://{host}:{port}"
-        logger.info(f"Peer endpoint updated: {self.peer_url}")
+        url = f"http://{host}:{port}"
+        changed = url != self.peer_url
+        self.peer_url = url
+        if changed:
+            logger.info(f"Peer endpoint updated: {self.peer_url}")
+            # On first contact adopt the peer's view of who owns which monitor, so a
+            # restart doesn't leave us guessing (which causes ghost screens).
+            threading.Thread(target=self._adopt_peer_state, args=(url,), daemon=True).start()
+
+    def _adopt_peer_state(self, url: str):
+        try:
+            with urllib.request.urlopen(f"{url}/api/status", timeout=3) as resp:
+                displays = json.loads(resp.read().decode("utf-8")).get("displays", {})
+            state = {k: displays[k]["active_host"] for k in ("left", "right")}
+            if all(v in ("mac", "pc") for v in state.values()) and state != self.current_state:
+                logger.info(f"Adopted peer state on startup: {state}")
+                self.update_state_from_peer(state)
+        except Exception as e:
+            logger.warning(f"Could not fetch peer state: {e}")
 
     def get_status(self) -> Dict[str, Any]:
         matched_preset = "custom"
