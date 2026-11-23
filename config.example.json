@@ -22,5 +22,17 @@
         "pc": 15
       }
     }
+  },
+  "environment": {
+    "enabled": true,
+    "keep_awake": true,
+    "remove_ghost_displays": true,
+    "input_leap": {
+      "enabled": false,
+      "config_path": "C:\\Users\\<you>\\InputLeap.conf",
+      "pc_screen": "PC",
+      "mac_screen": "MAC",
+      "restart_command": null
+    }
   }
 }
