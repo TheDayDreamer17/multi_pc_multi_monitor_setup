@@ -192,7 +192,8 @@ class WindowsEnvironment(NullEnvironment):
 
     def __init__(self, opts: dict):
         self.keep_awake = opts.get("keep_awake", True)
-        self.remove_ghost = opts.get("remove_ghost_displays", True)
+        # Opt-in on Windows: detaching displays edits persistent display config and can leave an output dark.
+        self.remove_ghost = opts.get("remove_ghost_displays_windows", False)
         self.il = opts.get("input_leap", {}) or {}
         self.snapshot_path = os.path.expanduser("~/.omnidisplay_layout_snapshot.json")
         self._awake_thread: Optional[threading.Thread] = None

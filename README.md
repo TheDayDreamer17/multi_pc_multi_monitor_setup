@@ -155,7 +155,7 @@ OmniDisplay comes with standard defaults that match most multi-monitor setups. I
 ```
 
 ### Ghost Displays, Keep-Awake & Input Leap (`environment`)
-* **Ghost display removal** – a monitor showing the *other* computer is removed from this computer's desktop (macOS: mirrored onto the live display; Windows: detached), so the cursor never crosses an invisible screen. It is restored automatically before any DDC command and when the monitor returns. Disable with `"remove_ghost_displays": false`.
+* **Ghost display removal** – a monitor showing the *other* computer is removed from this computer's desktop (macOS: mirrored onto the live display; Windows: detached), so the cursor never crosses an invisible screen. It is restored automatically before any DDC command and when the monitor returns. On macOS this is on by default (`"remove_ghost_displays": false` disables it). On Windows it is **opt-in** via `"remove_ghost_displays_windows": true`, because detaching a display edits persistent Windows display settings.
 * **Keep-awake** – while a machine owns at least one monitor it won't sleep its display, so the monitor no longer falls back to the other PC after idle. Disable with `"keep_awake": false`.
 * **Input Leap** – on the PC (Input Leap server) set `input_leap.enabled` and `config_path`; OmniDisplay rewrites the screen link (PC left/right of Mac) per preset and runs `restart_command` if set. Screen names must match your Input Leap screen names.
 
