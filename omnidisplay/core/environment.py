@@ -275,9 +275,22 @@ class WindowsEnvironment(NullEnvironment):
         snap = self._load_snapshot()
         if not snap:
             return
+        ok = True
         for d in snap["layout"]:
-            self._set_mode(d["name"], d["x"], d["y"], d["w"], d["h"], d.get("freq", 0), primary=(d["x"] == 0 and d["y"] == 0))
+            primary = (d["x"] == 0 and d["y"] == 0)
+            if not self._set_mode(d["name"], d["x"], d["y"], d["w"], d["h"], d.get("freq", 0), primary=primary):
+                # retry without a forced refresh rate
+                ok = self._set_mode(d["name"], d["x"], d["y"], d["w"], d["h"], 0, primary=primary) and ok
         self._commit()
+        if not ok:
+            # Windows may refuse per-device restore while a sibling monitor is on the
+            # other computer's input. Re-extend the desktop to re-attach every output.
+            logger.warning("Per-display restore failed; falling back to DisplaySwitch /extend")
+            try:
+                subprocess.run(["DisplaySwitch.exe", "/extend"], timeout=10)
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"DisplaySwitch /extend failed: {e}")
         self._clear_snapshot()
         logger.info("Restored full Windows display layout")
 
