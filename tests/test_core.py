@@ -5,6 +5,7 @@ Unit tests for OmniDisplay core logic.
 import unittest
 from omnidisplay.core.state_manager import StateManager, PRESETS
 from omnidisplay.core.ddc_base import DDCController
+from omnidisplay.core.environment import NullEnvironment
 
 class MockDDCController(DDCController):
     def __init__(self):
@@ -27,7 +28,7 @@ class TestOmniDisplayCore(unittest.TestCase):
 
     def setUp(self):
         self.mock_ddc = MockDDCController()
-        self.mgr = StateManager(self.mock_ddc, role="mac")
+        self.mgr = StateManager(self.mock_ddc, role="mac", environment=NullEnvironment())
 
     def test_presets_exist(self):
         expected_presets = ["pc_both", "mac_both", "split_pc_mac", "split_mac_pc"]

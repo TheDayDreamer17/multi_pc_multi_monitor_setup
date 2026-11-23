@@ -10,6 +10,7 @@ import urllib.error
 from typing import Dict, Any, Optional
 from omnidisplay.core.ddc_base import DDCController
 from omnidisplay.core.logger import get_logger
+from omnidisplay.core.environment import create_environment
 
 logger = get_logger("state_manager")
 
@@ -74,7 +75,7 @@ DEFAULT_CONFIG = {
 class StateManager:
     """Manages active display routing, configuration, and DDC dispatch."""
 
-    def __init__(self, ddc_controller: DDCController, role: str, config_path: Optional[str] = None):
+    def __init__(self, ddc_controller: DDCController, role: str, config_path: Optional[str] = None, environment=None):
         self.ddc = ddc_controller
         self.role = role  # "mac" or "pc"
         self.config_path = config_path or os.path.expanduser("~/.omnidisplay_config.json")
@@ -86,6 +87,15 @@ class StateManager:
             "right": "mac" if self.role == "mac" else "pc"
         }
         self.peer_url: Optional[str] = None
+        self.env = environment if environment is not None else create_environment(role, self.config)
+
+    def _refresh_environment(self):
+        """Remove ghost displays / hold keep-awake based on which monitors this host owns."""
+        owned = {k: self.current_state[k] == self.role for k in ("left", "right")}
+        try:
+            self.env.apply(owned, dict(self.current_state))
+        except Exception as e:
+            logger.warning(f"Environment refresh failed: {e}")
 
     def _load_or_create_config(self) -> Dict[str, Any]:
         if os.path.exists(self.config_path):
@@ -149,6 +159,7 @@ class StateManager:
             self.current_state["left"]
         )
         self._save_config()
+        self._refresh_environment()
         return True
 
     def set_peer_endpoint(self, host: str, port: int):
@@ -210,11 +221,13 @@ class StateManager:
 
         target = PRESETS[preset_id]
         logger.info(f"Applying preset '{preset_id}' -> Left: {target['left']}, Right: {target['right']}")
+        self.env.prepare_for_ddc()
         success_left = self.set_display_host("left", target["left"], sync_peer=False)
         success_right = self.set_display_host("right", target["right"], sync_peer=False)
 
         # Notify peer of updated state
         self._sync_state_to_peer()
+        self._refresh_environment()
         return success_left and success_right
 
     def set_display_host(self, display_key: str, target_host: str, sync_peer: bool = True) -> bool:
@@ -231,6 +244,7 @@ class StateManager:
         if target_vcp_code is None:
             raise ValueError(f"No VCP input configured for host '{target_host}' on {display_key}")
 
+        self.env.prepare_for_ddc()
         current_host = self.current_state[display_key]
         idx = disp_cfg["index_mac"] if self.role == "mac" else disp_cfg["index_pc"]
 
@@ -256,6 +270,7 @@ class StateManager:
 
         if sync_peer:
             self._sync_state_to_peer()
+            self._refresh_environment()
 
         return True
 
@@ -289,9 +304,11 @@ class StateManager:
         target_vcp_code = disp_cfg["inputs"].get(target_host)
         idx = disp_cfg["index_mac"] if self.role == "mac" else disp_cfg["index_pc"]
 
+        self.env.prepare_for_ddc()
         logger.info(f"Executing peer-relayed switch: {display_key} (idx {idx}) -> {target_host} (vcp 0x{target_vcp_code:X})")
         self.ddc.set_input_source(idx, target_vcp_code)
         self.current_state[display_key] = target_host
+        self._refresh_environment()
         return True
 
     def _wake_peer(self):
@@ -339,3 +356,4 @@ class StateManager:
             self.current_state["right"] = state["right"]
             if self.role in (state.get("left"), state.get("right")):
                 self.wake_host()
+            self._refresh_environment()
