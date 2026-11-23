@@ -22,6 +22,12 @@ clang -O2 \
   "${REPO_DIR}/omnidisplay/native/mac_ddc.c" \
   -o "${REPO_DIR}/omnidisplay/native/mac_ddc"
 chmod +x "${REPO_DIR}/omnidisplay/native/mac_ddc"
+clang -O2 \
+  -framework CoreGraphics \
+  -framework CoreFoundation \
+  "${REPO_DIR}/omnidisplay/native/mac_layout.c" \
+  -o "${REPO_DIR}/omnidisplay/native/mac_layout"
+chmod +x "${REPO_DIR}/omnidisplay/native/mac_layout"
 echo "✓ Native helper compiled successfully."
 
 # 2. Generate LaunchAgent plist

@@ -5,6 +5,7 @@ __pycache__/
 
 # C binaries & build artifacts
 omnidisplay/native/mac_ddc
+omnidisplay/native/mac_layout
 *.o
 *.so
 *.dylib
