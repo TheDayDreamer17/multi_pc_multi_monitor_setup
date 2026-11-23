@@ -5,6 +5,18 @@ Pure Python standard library implementation with zero external pip dependencies.
 
 import sys
 import os
+
+if sys.stdout is None:
+    try:
+        sys.stdout = open(os.devnull, "w")
+    except Exception:
+        pass
+if sys.stderr is None:
+    try:
+        sys.stderr = open(os.devnull, "w")
+    except Exception:
+        pass
+
 import time
 import json
 import mimetypes

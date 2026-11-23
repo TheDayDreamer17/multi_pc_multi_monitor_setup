@@ -1,4 +1,4 @@
-# install-windows.ps1 - Install OmniDisplay Desktop App and Auto-Start on Windows
+﻿# install-windows.ps1 - Install OmniDisplay Desktop App and Auto-Start on Windows
 
 $ErrorActionPreference = "Stop"
 
@@ -60,3 +60,4 @@ Start-Process -FilePath "wscript.exe" -ArgumentList "`"$StartupVbs`"" -WorkingDi
 Write-Host "`n✓ OmniDisplay is installed and active!" -ForegroundColor Green
 Write-Host "You can open the Desktop Software GUI anytime from the Desktop icon or by running:" -ForegroundColor Cyan
 Write-Host "python -m omnidisplay.gui.launcher" -ForegroundColor Yellow
+

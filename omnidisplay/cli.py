@@ -4,6 +4,19 @@ Command Line Interface (CLI) for OmniDisplay.
 
 import sys
 import os
+
+# Under pythonw.exe on Windows, sys.stdout and sys.stderr are None; redirect to devnull so print() doesn't crash
+if sys.stdout is None:
+    try:
+        sys.stdout = open(os.devnull, "w")
+    except Exception:
+        pass
+if sys.stderr is None:
+    try:
+        sys.stderr = open(os.devnull, "w")
+    except Exception:
+        pass
+
 import time
 import argparse
 import json
