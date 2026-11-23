@@ -56,6 +56,9 @@ class MacEnvironment(NullEnvironment):
         self.remove_ghost = opts.get("remove_ghost_displays", True)
         self._caffeinate: Optional[subprocess.Popen] = None
         self._ghost_slot: Optional[str] = None
+        self._owned: Optional[Dict[str, bool]] = None
+        self._lock = threading.RLock()
+        self._watcher: Optional[threading.Thread] = None
         native = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "native")
         helper = os.path.join(native, "mac_layout")
         self.helper = helper if os.path.exists(helper) else None
@@ -101,7 +104,9 @@ class MacEnvironment(NullEnvironment):
         if not wanted:
             return
         if len(displays) != 2:
-            logger.info(f"Ghost removal skipped: expected 2 external displays, found {len(displays)}")
+            if getattr(self, "_last_skip", None) != len(displays):
+                logger.info(f"Ghost removal waiting: expected 2 external displays, found {len(displays)}")
+                self._last_skip = len(displays)
             return
         by_x = sorted(displays, key=lambda d: d["x"])
         ghost = by_x[0] if wanted == "left" else by_x[1]
@@ -113,13 +118,31 @@ class MacEnvironment(NullEnvironment):
         else:
             logger.warning(f"Mirroring failed (rc={rc})")
 
+    def _watch(self):
+        """A monitor drops offline briefly after an input switch; re-check until the
+        layout matches the desired state (also self-heals later hot-plugs)."""
+        while True:
+            time.sleep(3)
+            with self._lock:
+                if self._owned is None:
+                    continue
+                try:
+                    self._apply_layout(self._owned)
+                except Exception as e:
+                    logger.debug(f"Layout watcher: {e}")
+
     def apply(self, owned, state):
-        self._set_awake(any(owned.values()) and self.keep_awake)
-        if self.remove_ghost and self.helper:
-            try:
-                self._apply_layout(owned)
-            except Exception as e:
-                logger.warning(f"Ghost display handling failed: {e}")
+        with self._lock:
+            self._owned = dict(owned)
+            self._set_awake(any(owned.values()) and self.keep_awake)
+            if self.remove_ghost and self.helper:
+                try:
+                    self._apply_layout(owned)
+                except Exception as e:
+                    logger.warning(f"Ghost display handling failed: {e}")
+                if not self._watcher:
+                    self._watcher = threading.Thread(target=self._watch, daemon=True)
+                    self._watcher.start()
 
     def shutdown(self):
         self._set_awake(False)
