@@ -4,6 +4,7 @@ Orchestrates the 4 dual-monitor presets and cross-host switching logic.
 """
 
 import os
+import threading
 import json
 import urllib.request
 import urllib.error
@@ -87,15 +88,21 @@ class StateManager:
             "right": "mac" if self.role == "mac" else "pc"
         }
         self.peer_url: Optional[str] = None
+        self._env_lock = threading.RLock()
         self.env = environment if environment is not None else create_environment(role, self.config)
 
     def _refresh_environment(self):
-        """Remove ghost displays / hold keep-awake based on which monitors this host owns."""
-        owned = {k: self.current_state[k] == self.role for k in ("left", "right")}
-        try:
-            self.env.apply(owned, dict(self.current_state))
-        except Exception as e:
-            logger.warning(f"Environment refresh failed: {e}")
+        """Remove ghost displays / hold keep-awake based on which monitors this host owns.
+
+        Serialized, with state read inside the lock: switch requests and peer syncs
+        arrive on different threads and must not interleave layout changes.
+        """
+        with self._env_lock:
+            owned = {k: self.current_state[k] == self.role for k in ("left", "right")}
+            try:
+                self.env.apply(owned, dict(self.current_state))
+            except Exception as e:
+                logger.warning(f"Environment refresh failed: {e}")
 
     def _load_or_create_config(self) -> Dict[str, Any]:
         if os.path.exists(self.config_path):
